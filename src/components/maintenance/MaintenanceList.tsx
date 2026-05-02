@@ -42,19 +42,23 @@ export function MaintenanceList() {
     const unsubscribe = supabaseService.subscribeCollection<MaintenanceRecord>('maintenance', (data) => {
       setRecords(data);
       setLoading(false);
-    });
+    }, 'createdAt');
     return () => unsubscribe();
   }, []);
 
   const handleSave = async () => {
     try {
       if (editingRecord) {
-        await supabaseService.updateDocument('maintenance', editingRecord.id, formData);
+        await supabaseService.updateDocument('maintenance', editingRecord.id, {
+          ...formData,
+          updatedAt: new Date().toISOString(),
+        });
         toast.success("Maintenance record updated");
       } else {
         await supabaseService.addDocument('maintenance', {
           ...formData,
           createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         });
         toast.success("Maintenance record added");
       }
@@ -143,6 +147,7 @@ export function MaintenanceList() {
             setIsDialogOpen(true);
           }}
           onDelete={handleDelete}
+          useDirectActions={true}
           searchPlaceholder="Search records..."
         />
       )}

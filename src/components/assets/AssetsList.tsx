@@ -24,12 +24,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ASSET_TYPES, LOCATIONS } from '@/src/constants';
 import { toast } from "sonner";
+import { QRCodeSVG } from 'qrcode.react';
 
 export function AssetsList() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [qrAsset, setQRAsset] = useState<Asset | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -39,25 +42,31 @@ export function AssetsList() {
     status: AssetStatus.IN_STOCK,
     location: LOCATIONS[0],
     assignedTo: '',
+    remark: '',
   });
 
   useEffect(() => {
     const unsubscribe = supabaseService.subscribeCollection<Asset>('assets', (data) => {
       setAssets(data);
       setLoading(false);
-    });
+    }, 'createdAt');
     return () => unsubscribe();
   }, []);
 
   const handleSave = async () => {
     try {
       if (editingAsset) {
-        await supabaseService.updateDocument('assets', editingAsset.id, formData);
+        await supabaseService.updateDocument('assets', editingAsset.id, {
+          ...formData,
+          updatedAt: new Date().toISOString(),
+        });
         toast.success("Asset updated successfully");
       } else {
         await supabaseService.addDocument('assets', {
           ...formData,
           approvalStatus: ApprovalStatus.APPROVED,
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
         });
         toast.success("Asset added successfully");
       }
@@ -87,6 +96,7 @@ export function AssetsList() {
       status: AssetStatus.IN_STOCK,
       location: LOCATIONS[0],
       assignedTo: '',
+      remark: '',
     });
     setEditingAsset(null);
   };
@@ -146,13 +156,54 @@ export function AssetsList() {
               status: asset.status,
               location: asset.location || LOCATIONS[0],
               assignedTo: asset.assignedTo || '',
+              remark: asset.remark || '',
             });
             setIsDialogOpen(true); 
           }}
           onDelete={handleDelete}
+          onViewQR={(asset) => {
+            setQRAsset(asset);
+            setIsQRDialogOpen(true);
+          }}
+          useDirectActions={true}
           searchPlaceholder="Search assets..."
         />
       )}
+
+      {/* QR Code Dialog */}
+      <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Asset QR Code</DialogTitle>
+            <DialogDescription>
+              Scan this code to see asset details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center space-y-6 pt-6">
+            {qrAsset && (
+              <>
+                <div className="p-4 bg-white rounded-lg shadow-sm border">
+                  <QRCodeSVG 
+                    value={`Name: ${qrAsset.name}\nSerial: ${qrAsset.serialNumber || 'N/A'}\nAssigned: ${qrAsset.assignedTo || 'Unassigned'}`}
+                    size={200}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+                <div className="text-center space-y-1">
+                  <h4 className="font-bold text-lg">{qrAsset.name}</h4>
+                  <p className="text-sm text-muted-foreground">S/N: {qrAsset.serialNumber || 'N/A'}</p>
+                  <p className="text-sm font-medium">Assigned to: {qrAsset.assignedTo || 'None'}</p>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => window.print()} variant="outline">Print Code</Button>
+            <Button onClick={() => setIsQRDialogOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -212,6 +263,42 @@ export function AssetsList() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="location" className="text-right">Location</Label>
+              <div className="col-span-3">
+                <Select 
+                  value={formData.location} 
+                  onValueChange={(val) => setFormData({ ...formData, location: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LOCATIONS.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="assignedTo" className="text-right">Assigned</Label>
+              <Input
+                id="assignedTo"
+                className="col-span-3"
+                value={formData.assignedTo}
+                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                placeholder="Employee Name"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="remark" className="text-right">Notes</Label>
+              <Input
+                id="remark"
+                className="col-span-3"
+                value={formData.remark}
+                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                placeholder="Additional details..."
+              />
             </div>
           </div>
           <DialogFooter>

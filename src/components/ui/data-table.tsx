@@ -22,8 +22,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoreHorizontal, Search, PlusCircle, Filter } from "lucide-react";
+import { MoreHorizontal, Search, PlusCircle, Filter, Pencil, Trash2, QrCode } from "lucide-react";
 import { useState } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DataTableProps<T> {
   data: T[];
@@ -34,10 +35,12 @@ interface DataTableProps<T> {
   }[];
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  onViewQR?: (item: T) => void;
   title: string;
   onAdd?: () => void;
   searchPlaceholder?: string;
   actionsLabel?: string;
+  useDirectActions?: boolean;
 }
 
 export function DataTable<T extends { id: string }>({
@@ -45,10 +48,12 @@ export function DataTable<T extends { id: string }>({
   columns,
   onEdit,
   onDelete,
+  onViewQR,
   title,
   onAdd,
   searchPlaceholder = "Search...",
-  actionsLabel = "Actions"
+  actionsLabel = "Actions",
+  useDirectActions = false
 }: DataTableProps<T>) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -91,7 +96,7 @@ export function DataTable<T extends { id: string }>({
               {columns.map((col, i) => (
                 <TableHead key={i}>{col.header}</TableHead>
               ))}
-              <TableHead className="w-[80px]">{actionsLabel}</TableHead>
+              <TableHead className={useDirectActions ? "w-[120px]" : "w-[80px]"}>{actionsLabel}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -104,24 +109,80 @@ export function DataTable<T extends { id: string }>({
                     </TableCell>
                   ))}
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onEdit?.(item)}>Edit</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => onDelete?.(item)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {useDirectActions ? (
+                      <div className="flex items-center gap-1">
+                        <TooltipProvider>
+                          {onViewQR && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewQR(item)}>
+                                  <QrCode className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>View QR</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {onEdit && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(item)}>
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit</TooltipContent>
+                            </Tooltip>
+                          )}
+                          {onDelete && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" 
+                                  onClick={() => onDelete(item)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </TooltipProvider>
+                      </div>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0" id={`actions-trigger-${item.id}`}>
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          {onViewQR && (
+                            <DropdownMenuItem onSelect={() => onViewQR(item)}>
+                              View QR Code
+                            </DropdownMenuItem>
+                          )}
+                          {onEdit && (
+                            <DropdownMenuItem onSelect={() => onEdit(item)}>
+                              Edit
+                            </DropdownMenuItem>
+                          )}
+                          {onDelete && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onSelect={() => onDelete(item)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

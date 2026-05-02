@@ -51,7 +51,8 @@ CREATE TABLE IF NOT EXISTS public.maintenance (
   "cost" DECIMAL(10,2) DEFAULT 0,
   "status" TEXT DEFAULT 'Completed',
   "date" DATE DEFAULT CURRENT_DATE,
-  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 5. Create EMPLOYEES table

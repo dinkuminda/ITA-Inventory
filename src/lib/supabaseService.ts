@@ -5,15 +5,21 @@
 
 import { supabase } from './supabase';
 
-async function getCollection<T>(table: string): Promise<T[]> {
-  const { data, error } = await supabase
-    .from(table)
-    .select('*')
-    .order('updatedAt', { ascending: false } as any);
-    
+async function getCollection<T>(table: string, orderBy: string = 'updatedAt'): Promise<T[]> {
+  let query = supabase.from(table).select('*');
+  
+  // Try to order by the specified column, fallback if it fails
+  const { data, error } = await query.order(orderBy as any, { ascending: false } as any);
+      
   if (error) {
-    console.error(`Supabase Error (list ${table}):`, error);
-    return [];
+    // If ordering failed (e.g. column doesn't exist), try without ordering
+    console.warn(`Supabase Order Warning (list ${table}):`, error.message);
+    const { data: unorderedData, error: unorderedError } = await supabase.from(table).select('*');
+    if (unorderedError) {
+      console.error(`Supabase Error (list ${table}):`, unorderedError);
+      return [];
+    }
+    return (unorderedData || []) as T[];
   }
   return (data || []) as T[];
 }
@@ -21,15 +27,15 @@ async function getCollection<T>(table: string): Promise<T[]> {
 export const supabaseService = {
   getCollection,
 
-  subscribeCollection<T>(table: string, callback: (data: T[]) => void) {
+  subscribeCollection<T>(table: string, callback: (data: T[]) => void, orderBy: string = 'updatedAt') {
     // Initial fetch
-    void getCollection<T>(table).then(callback);
+    void getCollection<T>(table, orderBy).then(callback);
 
     // Subscribe to changes
     const channel = supabase
       .channel(`${table}_changes`)
       .on('postgres_changes' as any, { event: '*', schema: 'public', table } as any, () => {
-        void getCollection<T>(table).then(callback);
+        void getCollection<T>(table, orderBy).then(callback);
       })
       .subscribe();
 

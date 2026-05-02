@@ -52,14 +52,17 @@ export function StaffList() {
     const unsubscribe = supabaseService.subscribeCollection<Employee>('employees', (data) => {
       setEmployees(data);
       setLoading(false);
-    });
+    }, 'createdAt');
     return () => unsubscribe();
   }, []);
 
   const handleSave = async () => {
     try {
       if (editingEmployee) {
-        await supabaseService.updateDocument('employees', editingEmployee.id, formData);
+        await supabaseService.updateDocument('employees', editingEmployee.id, {
+          ...formData,
+          updatedAt: new Date().toISOString(),
+        });
         toast.success("Employee updated successfully");
       } else {
         await supabaseService.addDocument('employees', {
@@ -146,6 +149,7 @@ export function StaffList() {
             setIsDialogOpen(true);
           }}
           onDelete={handleDelete}
+          useDirectActions={true}
           searchPlaceholder="Search staff..."
         />
       )}

@@ -42,18 +42,22 @@ export function LicensesList() {
     const unsubscribe = supabaseService.subscribeCollection<License>('licenses', (data) => {
       setLicenses(data);
       setLoading(false);
-    });
+    }, 'createdAt');
     return () => unsubscribe();
   }, []);
 
   const handleSave = async () => {
     try {
       if (editingLicense) {
-        await supabaseService.updateDocument('licenses', editingLicense.id, formData);
+        await supabaseService.updateDocument('licenses', editingLicense.id, {
+          ...formData,
+          updatedAt: new Date().toISOString(),
+        });
         toast.success("License updated successfully");
       } else {
         await supabaseService.addDocument('licenses', {
           ...formData,
+          createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
         toast.success("License added successfully");
@@ -148,6 +152,7 @@ export function LicensesList() {
             setIsDialogOpen(true);
           }}
           onDelete={handleDelete}
+          useDirectActions={true}
           searchPlaceholder="Search licenses..."
         />
       )}
