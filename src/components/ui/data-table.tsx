@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoreHorizontal, Search, PlusCircle, Filter, Pencil, Trash2, QrCode } from "lucide-react";
+import { MoreHorizontal, Search, PlusCircle, Filter, Pencil, Trash2, QrCode, Download, Upload } from "lucide-react";
 import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -38,6 +38,8 @@ interface DataTableProps<T> {
   onViewQR?: (item: T) => void;
   title: string;
   onAdd?: () => void;
+  onExport?: () => void;
+  onImport?: (file: File) => void;
   searchPlaceholder?: string;
   actionsLabel?: string;
   useDirectActions?: boolean;
@@ -51,6 +53,8 @@ export function DataTable<T extends { id: string }>({
   onViewQR,
   title,
   onAdd,
+  onExport,
+  onImport,
   searchPlaceholder = "Search...",
   actionsLabel = "Actions",
   useDirectActions = false
@@ -81,6 +85,35 @@ export function DataTable<T extends { id: string }>({
           <Button variant="outline" size="icon">
             <Filter className="h-4 w-4" />
           </Button>
+          {onExport && (
+            <Button variant="outline" size="sm" onClick={onExport} className="gap-1 h-9">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
+          )}
+          {onImport && (
+            <div className="relative">
+              <Input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                id={`import-csv-${title}`}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) onImport(file);
+                }}
+              />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1 h-9"
+                onClick={() => document.getElementById(`import-csv-${title}`)?.click()}
+              >
+                <Upload className="h-4 w-4" />
+                <span className="hidden sm:inline">Import</span>
+              </Button>
+            </div>
+          )}
         </div>
         {onAdd && (
           <Button onClick={onAdd} className="gap-1">

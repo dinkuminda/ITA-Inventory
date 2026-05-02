@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import Papa from 'papaparse';
+import { format } from 'date-fns';
 
 interface Employee {
   id: string;
@@ -103,6 +105,50 @@ export function StaffList() {
     setEditingEmployee(null);
   };
 
+  const handleExport = () => {
+    const exportData = employees.map(({ id, createdAt, updatedAt, ...rest }: any) => rest);
+    const csv = Papa.unparse(exportData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `staff_export_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Staff list exported");
+  };
+
+  const handleImport = (file: File) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const importedData = results.data as any[];
+          const formatted = importedData.map(item => ({
+            employeeId: item.employeeId || item['Emp ID'] || item.ID || '',
+            fullName: item.fullName || item.Name || item['Full Name'] || 'Unknown',
+            email: item.email || item.Email || '',
+            department: item.department || item.Dept || '',
+            position: item.position || item.Position || '',
+            status: item.status || item.Status || 'Active',
+            joinDate: item.joinDate || item['Join Date'] || new Date().toISOString().split('T')[0],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
+
+          if (formatted.length > 0) {
+            await supabaseService.addDocuments('employees', formatted);
+            toast.success(`Successfully imported ${formatted.length} employees`);
+          }
+        } catch (error) {
+          toast.error("Import failed");
+        }
+      }
+    });
+  };
+
   const columns = [
     { header: 'ID', accessorKey: 'employeeId' as keyof Employee },
     { header: 'Name', accessorKey: 'fullName' as keyof Employee },
@@ -135,6 +181,8 @@ export function StaffList() {
           data={employees}
           columns={columns}
           onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onExport={handleExport}
+          onImport={handleImport}
           onEdit={(employee) => {
             setEditingEmployee(employee);
             setFormData({

@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ASSET_TYPES, LOCATIONS } from '@/src/constants';
 import { toast } from "sonner";
 import { QRCodeSVG } from 'qrcode.react';
+import Papa from 'papaparse';
 
 export function AssetsList() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -101,6 +102,58 @@ export function AssetsList() {
     setEditingAsset(null);
   };
 
+  const handleExport = () => {
+    const exportData = assets.map(({ id, createdAt, updatedAt, approvalStatus, ...rest }) => rest);
+    const csv = Papa.unparse(exportData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `assets_export_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Assets exported to CSV");
+  };
+
+  const handleImport = (file: File) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const importedData = results.data as any[];
+          const formattedAssets = importedData.map(item => ({
+            name: item.name || item.Name || "Unnamed Asset",
+            type: item.type || item.Type || ASSET_TYPES[0],
+            serialNumber: item.serialNumber || item.SerialNumber || item['Serial No.'] || "",
+            status: (item.status || item.Status || AssetStatus.IN_STOCK) as AssetStatus,
+            location: item.location || item.Location || LOCATIONS[0],
+            assignedTo: item.assignedTo || item.AssignedTo || item['Assigned To'] || "",
+            remark: item.remark || item.Remark || item.Notes || "",
+            approvalStatus: ApprovalStatus.APPROVED,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
+
+          if (formattedAssets.length > 0) {
+            await supabaseService.addDocuments('assets', formattedAssets);
+            toast.success(`Successfully imported ${formattedAssets.length} assets`);
+          } else {
+            toast.info("No valid assets found in CSV");
+          }
+        } catch (error) {
+          console.error("Import error:", error);
+          toast.error("Failed to import CSV. Please check the file format.");
+        }
+      },
+      error: (error) => {
+        console.error("CSV Parsing error:", error);
+        toast.error("Error parsing CSV file");
+      }
+    });
+  };
+
   const columns = [
     { header: 'Name', accessorKey: 'name' as keyof Asset },
     { header: 'Type', accessorKey: 'type' as keyof Asset },
@@ -147,6 +200,8 @@ export function AssetsList() {
           data={assets}
           columns={columns}
           onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onExport={handleExport}
+          onImport={handleImport}
           onEdit={(asset) => { 
             setEditingAsset(asset);
             setFormData({

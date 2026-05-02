@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import Papa from 'papaparse';
+import { format } from 'date-fns';
 
 export function MaintenanceList() {
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
@@ -92,6 +94,49 @@ export function MaintenanceList() {
     setEditingRecord(null);
   };
 
+  const handleExport = () => {
+    const exportData = records.map(({ id, createdAt, updatedAt, ...rest }: any) => rest);
+    const csv = Papa.unparse(exportData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `maintenance_export_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Maintenance records exported");
+  };
+
+  const handleImport = (file: File) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const importedData = results.data as any[];
+          const formatted = importedData.map(item => ({
+            assetId: item.assetId || item['Asset ID'] || '',
+            issueDescription: item.issueDescription || item.Issue || '',
+            performedBy: item.performedBy || item['Performed By'] || '',
+            status: (item.status || item.Status || MaintenanceStatus.PENDING) as MaintenanceStatus,
+            cost: parseFloat(item.cost || item.Cost || '0') || 0,
+            date: item.date || item.Date || new Date().toISOString().split('T')[0],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
+
+          if (formatted.length > 0) {
+            await supabaseService.addDocuments('maintenance', formatted);
+            toast.success(`Successfully imported ${formatted.length} records`);
+          }
+        } catch (error) {
+          toast.error("Import failed");
+        }
+      }
+    });
+  };
+
   const columns = [
     { header: 'Date', accessorKey: 'date' as keyof MaintenanceRecord },
     { header: 'Issue', accessorKey: 'issueDescription' as keyof MaintenanceRecord },
@@ -134,6 +179,8 @@ export function MaintenanceList() {
           data={records}
           columns={columns}
           onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onExport={handleExport}
+          onImport={handleImport}
           onEdit={(record) => {
             setEditingRecord(record);
             setFormData({

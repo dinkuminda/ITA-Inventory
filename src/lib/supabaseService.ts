@@ -58,6 +58,14 @@ export const supabaseService = {
     return result as T;
   },
 
+  async addDocuments<T extends object>(table: string, data: T[]): Promise<void> {
+    const { error } = await supabase.from(table).insert(data as any);
+    if (error) {
+      console.error(`Supabase Error (add multiple ${table}):`, error);
+      throw error;
+    }
+  },
+
   async updateDocument<T extends object>(table: string, id: string, data: Partial<T>): Promise<void> {
     const { error } = await supabase
       .from(table)

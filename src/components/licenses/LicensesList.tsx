@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import Papa from 'papaparse';
+import { format } from 'date-fns';
 
 export function LicensesList() {
   const [licenses, setLicenses] = useState<License[]>([]);
@@ -92,6 +94,49 @@ export function LicensesList() {
     setEditingLicense(null);
   };
 
+  const handleExport = () => {
+    const exportData = licenses.map(({ id, updatedAt, ...rest }: any) => rest);
+    const csv = Papa.unparse(exportData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `licenses_export_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Licenses exported");
+  };
+
+  const handleImport = (file: File) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const importedData = results.data as any[];
+          const formatted = importedData.map(item => ({
+            name: item.name || item.Name || 'Unknown License',
+            vendor: item.vendor || item.Vendor || '',
+            seats: parseInt(item.seats || item.Seats || '1') || 1,
+            usedSeats: parseInt(item.usedSeats || item['Used Seats'] || '0') || 0,
+            status: (item.status || item.Status || LicenseStatus.ACTIVE) as LicenseStatus,
+            expiryDate: item.expiryDate || item.Expiry || item['Expiry Date'] || '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
+
+          if (formatted.length > 0) {
+            await supabaseService.addDocuments('licenses', formatted);
+            toast.success(`Successfully imported ${formatted.length} licenses`);
+          }
+        } catch (error) {
+          toast.error("Import failed");
+        }
+      }
+    });
+  };
+
   const columns = [
     { header: 'Name', accessorKey: 'name' as keyof License },
     { header: 'Vendor', accessorKey: 'vendor' as keyof License },
@@ -139,6 +184,8 @@ export function LicensesList() {
           data={licenses}
           columns={columns}
           onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onExport={handleExport}
+          onImport={handleImport}
           onEdit={(license) => { 
             setEditingLicense(license);
             setFormData({
