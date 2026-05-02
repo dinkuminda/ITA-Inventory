@@ -5,43 +5,45 @@
 
 import { supabase } from './supabase';
 
+async function getCollection<T>(table: string): Promise<T[]> {
+  const { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .order('updatedAt', { ascending: false } as any);
+    
+  if (error) {
+    console.error(`Supabase Error (list ${table}):`, error);
+    return [];
+  }
+  return (data || []) as T[];
+}
+
 export const supabaseService = {
-  async getCollection<T>(table: string): Promise<T[]> {
-    const { data, error } = await supabase
-      .from(table)
-      .select('*')
-      .order('updatedAt', { ascending: false });
-      
-    if (error) {
-      console.error(`Supabase Error (list ${table}):`, error);
-      return [];
-    }
-    return data as T[];
-  },
+  getCollection,
 
   subscribeCollection<T>(table: string, callback: (data: T[]) => void) {
     // Initial fetch
-    this.getCollection<T>(table).then(callback);
+    void getCollection<T>(table).then(callback);
 
     // Subscribe to changes
     const channel = supabase
       .channel(`${table}_changes`)
-      .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
-        this.getCollection<T>(table).then(callback);
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table } as any, () => {
+        void getCollection<T>(table).then(callback);
       })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   },
 
   async addDocument<T extends object>(table: string, data: T): Promise<T | null> {
-    const { data: result, error } = await supabase
+    const { data: result, error } = await (supabase
       .from(table)
-      .insert([data])
+      .insert([data] as any)
       .select()
-      .single();
+      .single() as any);
       
     if (error) {
       console.error(`Supabase Error (add ${table}):`, error);
@@ -53,7 +55,7 @@ export const supabaseService = {
   async updateDocument<T extends object>(table: string, id: string, data: Partial<T>): Promise<void> {
     const { error } = await supabase
       .from(table)
-      .update(data)
+      .update(data as any)
       .eq('id', id);
       
     if (error) {

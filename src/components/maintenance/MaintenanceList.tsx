@@ -8,13 +8,35 @@ import { useState, useEffect } from 'react';
 import { MaintenanceRecord, MaintenanceStatus } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
 import { supabaseService } from '@/src/lib/supabaseService';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 export function MaintenanceList() {
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
+
+  const [formData, setFormData] = useState({
+    assetId: '',
+    issueDescription: '',
+    performedBy: '',
+    status: MaintenanceStatus.PENDING,
+    cost: 0,
+    date: new Date().toISOString().split('T')[0],
+  });
 
   useEffect(() => {
     const unsubscribe = supabaseService.subscribeCollection<MaintenanceRecord>('maintenance', (data) => {
@@ -23,6 +45,48 @@ export function MaintenanceList() {
     });
     return () => unsubscribe();
   }, []);
+
+  const handleSave = async () => {
+    try {
+      if (editingRecord) {
+        await supabaseService.updateDocument('maintenance', editingRecord.id, formData);
+        toast.success("Maintenance record updated");
+      } else {
+        await supabaseService.addDocument('maintenance', {
+          ...formData,
+          createdAt: new Date().toISOString(),
+        });
+        toast.success("Maintenance record added");
+      }
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      toast.error("Failed to save record");
+    }
+  };
+
+  const handleDelete = async (record: MaintenanceRecord) => {
+    if (confirm(`Are you sure you want to delete this record?`)) {
+      try {
+        await supabaseService.deleteDocument('maintenance', record.id);
+        toast.success("Record deleted");
+      } catch (error) {
+        toast.error("Failed to delete record");
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      assetId: '',
+      issueDescription: '',
+      performedBy: '',
+      status: MaintenanceStatus.PENDING,
+      cost: 0,
+      date: new Date().toISOString().split('T')[0],
+    });
+    setEditingRecord(null);
+  };
 
   const columns = [
     { header: 'Date', accessorKey: 'date' as keyof MaintenanceRecord },
@@ -65,10 +129,94 @@ export function MaintenanceList() {
           title="Record"
           data={records}
           columns={columns}
-          onAdd={() => toast.info("Add Maintenance dialog coming in next update")}
+          onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onEdit={(record) => {
+            setEditingRecord(record);
+            setFormData({
+              assetId: record.assetId,
+              issueDescription: record.issueDescription,
+              performedBy: record.performedBy || '',
+              status: record.status,
+              cost: record.cost,
+              date: record.date,
+            });
+            setIsDialogOpen(true);
+          }}
+          onDelete={handleDelete}
           searchPlaceholder="Search records..."
         />
       )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingRecord ? 'Edit Record' : 'Add Maintenance Record'}</DialogTitle>
+            <DialogDescription>
+              Log maintenance activities for equipment tracking.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="issue" className="text-right">Issue</Label>
+              <Input
+                id="issue"
+                className="col-span-3"
+                value={formData.issueDescription}
+                onChange={(e) => setFormData({ ...formData, issueDescription: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="performedBy" className="text-right">By</Label>
+              <Input
+                id="performedBy"
+                className="col-span-3"
+                value={formData.performedBy}
+                onChange={(e) => setFormData({ ...formData, performedBy: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="cost" className="text-right">Cost ($)</Label>
+              <Input
+                id="cost"
+                type="number"
+                className="col-span-3"
+                value={formData.cost}
+                onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status" className="text-right">Status</Label>
+              <div className="col-span-3">
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(val: MaintenanceStatus) => setFormData({ ...formData, status: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(MaintenanceStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="date" className="text-right">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                className="col-span-3"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave}>Save Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
