@@ -58,7 +58,11 @@ export default function App() {
         toast.success("Welcome back!");
       }
     } catch (error: any) {
-      toast.error(error.message || "Authentication failed");
+      if (!isSignUp && (error.message === "Invalid login credentials" || error.status === 400)) {
+        toast.error("Invalid username and password");
+      } else {
+        toast.error(error.message || "Authentication failed");
+      }
     } finally {
       setLoading(false);
     }
