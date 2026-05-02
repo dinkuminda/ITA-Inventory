@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "Asset": {
+      "title": "Asset",
+      "description": "IT hardware asset",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "serialNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["In Stock", "Assigned", "Under Maintenance", "Retired"] },
+        "assignedTo": { "type": "string" },
+        "roles": { "type": "string" },
+        "location": { "type": "string" },
+        "date": { "type": "string" },
+        "remark": { "type": "string" },
+        "notes": { "type": "string" },
+        "approvalStatus": { "type": "string", "enum": ["Pending", "Approved", "Rejected"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "type"]
+    },
+    "License": {
+      "title": "License",
+      "description": "Software license",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "vendor": { "type": "string" },
+        "type": { "type": "string" },
+        "key": { "type": "string" },
+        "seats": { "type": "integer" },
+        "usedSeats": { "type": "integer" },
+        "status": { "type": "string", "enum": ["Active", "Expired", "Suspended"] },
+        "assignedTo": { "type": "string" },
+        "department": { "type": "string" },
+        "expiryDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "Maintenance": {
+      "title": "Maintenance",
+      "description": "Maintenance record for an asset",
+      "type": "object",
+      "properties": {
+        "assetId": { "type": "string" },
+        "issueDescription": { "type": "string" },
+        "actionTaken": { "type": "string" },
+        "performedBy": { "type": "string" },
+        "cost": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pending", "In Progress", "Completed"] },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["assetId", "issueDescription"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Staff member",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "department": { "type": "string" },
+        "position": { "type": "string" },
+        "joinDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "On Leave", "Terminated"] },
+        "profileId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fullName", "email"]
+    },
+    "Profile": {
+      "title": "Profile",
+      "description": "User profile for RBAC",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["Admin", "Staff"] },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" }
+      },
+      "required": ["role", "email"]
+    }
+  },
+  "firestore": {
+    "/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "Hardware assets"
+    },
+    "/licenses/{licenseId}": {
+      "schema": "License",
+      "description": "Software licenses"
+    },
+    "/maintenance/{maintenanceId}": {
+      "schema": "Maintenance",
+      "description": "Maintenance records"
+    },
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Staff members"
+    },
+    "/profiles/{profileId}": {
+      "schema": "Profile",
+      "description": "User RBAC profiles"
+    }
+  }
+}
