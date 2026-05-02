@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { UserRole } from '@/src/types';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', value: 'dashboard' },
@@ -39,11 +40,16 @@ const navItems = [
 interface AppSidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  user?: { email: string; displayName: string };
+  user?: { email: string; displayName: string; role: UserRole };
   onLogout: () => void;
 }
 
 export function AppSidebar({ activeTab, setActiveTab, user, onLogout }: AppSidebarProps) {
+  const filteredNavItems = navItems.filter(item => {
+    if (item.value === 'staff' && user?.role !== UserRole.ADMIN) return false;
+    return true;
+  });
+
   return (
     <Sidebar className="border-r">
       <SidebarHeader className="p-4 border-b">
@@ -56,7 +62,7 @@ export function AppSidebar({ activeTab, setActiveTab, user, onLogout }: AppSideb
       </SidebarHeader>
       <SidebarContent className="py-4">
         <SidebarMenu>
-          {navItems.map((item) => (
+          {filteredNavItems.map((item) => (
             <SidebarMenuItem key={item.value}>
               <SidebarMenuButton
                 onClick={() => setActiveTab(item.value)}
@@ -84,18 +90,23 @@ export function AppSidebar({ activeTab, setActiveTab, user, onLogout }: AppSideb
                 <span className="text-sm font-medium truncate">
                   {user?.displayName || 'User'}
                 </span>
-                <span className="text-xs text-muted-foreground truncate">
+                <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
                   {user?.email}
+                  {user?.role === UserRole.ADMIN && (
+                    <span className="text-[10px] bg-primary/10 text-primary px-1 rounded uppercase font-bold">Admin</span>
+                  )}
                 </span>
               </div>
             </div>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setActiveTab('settings')} isActive={activeTab === 'settings'}>
-              <Settings size={18} />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {user?.role === UserRole.ADMIN && (
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => setActiveTab('settings')} isActive={activeTab === 'settings'}>
+                <Settings size={18} />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton onClick={onLogout} className="text-destructive hover:text-destructive hover:bg-destructive/10">
               <LogOut size={18} />

@@ -155,7 +155,8 @@ export default function App() {
           setActiveTab={setActiveTab}
           user={{ 
             email: user.email || '', 
-            displayName: profile?.displayName || user.displayName || 'User' 
+            displayName: profile?.displayName || user.displayName || 'User',
+            role: profile?.role || UserRole.STAFF
           }}
           onLogout={handleLogout}
         />
@@ -170,9 +171,9 @@ export default function App() {
           </div>
           <div className="p-4 md:p-8">
             {activeTab === 'dashboard' && <Dashboard />}
-            {activeTab === 'assets' && <AssetsList />}
-            {activeTab === 'licenses' && <LicensesList />}
-            {activeTab === 'maintenance' && <MaintenanceList />}
+            {activeTab === 'assets' && <AssetsList userRole={profile?.role} />}
+            {activeTab === 'licenses' && <LicensesList userRole={profile?.role} />}
+            {activeTab === 'maintenance' && <MaintenanceList userRole={profile?.role} />}
             {activeTab === 'staff' && <StaffList />}
             {activeTab === 'settings' && (
               <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">

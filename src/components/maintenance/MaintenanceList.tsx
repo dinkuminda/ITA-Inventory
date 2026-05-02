@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { MaintenanceRecord, MaintenanceStatus } from '@/src/types';
+import { MaintenanceRecord, MaintenanceStatus, UserRole } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { supabaseService } from '@/src/lib/supabaseService';
@@ -25,11 +25,13 @@ import { toast } from "sonner";
 import Papa from 'papaparse';
 import { format } from 'date-fns';
 
-export function MaintenanceList() {
+export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
+
+  const isAdmin = userRole === UserRole.ADMIN;
 
   const [formData, setFormData] = useState({
     assetId: '',
@@ -178,10 +180,10 @@ export function MaintenanceList() {
           title="Record"
           data={records}
           columns={columns}
-          onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onAdd={isAdmin ? () => { resetForm(); setIsDialogOpen(true); } : undefined}
           onExport={handleExport}
-          onImport={handleImport}
-          onEdit={(record) => {
+          onImport={isAdmin ? handleImport : undefined}
+          onEdit={isAdmin ? (record) => {
             setEditingRecord(record);
             setFormData({
               assetId: record.assetId,
@@ -192,8 +194,8 @@ export function MaintenanceList() {
               date: record.date,
             });
             setIsDialogOpen(true);
-          }}
-          onDelete={handleDelete}
+          } : undefined}
+          onDelete={isAdmin ? handleDelete : undefined}
           useDirectActions={true}
           searchPlaceholder="Search records..."
         />

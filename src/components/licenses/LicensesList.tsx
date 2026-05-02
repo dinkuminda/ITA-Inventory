@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { License, LicenseStatus } from '@/src/types';
+import { License, LicenseStatus, UserRole } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { supabaseService } from '@/src/lib/supabaseService';
@@ -25,11 +25,13 @@ import { toast } from "sonner";
 import Papa from 'papaparse';
 import { format } from 'date-fns';
 
-export function LicensesList() {
+export function LicensesList({ userRole }: { userRole?: UserRole }) {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLicense, setEditingLicense] = useState<License | null>(null);
+
+  const isAdmin = userRole === UserRole.ADMIN;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -183,10 +185,10 @@ export function LicensesList() {
           title="License"
           data={licenses}
           columns={columns}
-          onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onAdd={isAdmin ? () => { resetForm(); setIsDialogOpen(true); } : undefined}
           onExport={handleExport}
-          onImport={handleImport}
-          onEdit={(license) => { 
+          onImport={isAdmin ? handleImport : undefined}
+          onEdit={isAdmin ? (license) => { 
             setEditingLicense(license);
             setFormData({
               name: license.name,
@@ -197,8 +199,8 @@ export function LicensesList() {
               expiryDate: license.expiryDate || '',
             });
             setIsDialogOpen(true);
-          }}
-          onDelete={handleDelete}
+          } : undefined}
+          onDelete={isAdmin ? handleDelete : undefined}
           useDirectActions={true}
           searchPlaceholder="Search licenses..."
         />

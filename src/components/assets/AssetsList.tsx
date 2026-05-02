@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { Asset, AssetStatus, ApprovalStatus } from '@/src/types';
+import { Asset, AssetStatus, ApprovalStatus, UserRole } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -27,13 +27,15 @@ import { toast } from "sonner";
 import { QRCodeSVG } from 'qrcode.react';
 import Papa from 'papaparse';
 
-export function AssetsList() {
+export function AssetsList({ userRole }: { userRole?: UserRole }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [qrAsset, setQRAsset] = useState<Asset | null>(null);
+
+  const isAdmin = userRole === UserRole.ADMIN;
 
   // Form State
   const [formData, setFormData] = useState({
@@ -204,10 +206,10 @@ export function AssetsList() {
           title="Asset"
           data={assets}
           columns={columns}
-          onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onAdd={isAdmin ? () => { resetForm(); setIsDialogOpen(true); } : undefined}
           onExport={handleExport}
-          onImport={handleImport}
-          onEdit={(asset) => { 
+          onImport={isAdmin ? handleImport : undefined}
+          onEdit={isAdmin ? (asset) => { 
             setEditingAsset(asset);
             setFormData({
               name: asset.name,
@@ -220,8 +222,8 @@ export function AssetsList() {
               remark: asset.remark || '',
             });
             setIsDialogOpen(true); 
-          }}
-          onDelete={handleDelete}
+          } : undefined}
+          onDelete={isAdmin ? handleDelete : undefined}
           onViewQR={(asset) => {
             setQRAsset(asset);
             setIsQRDialogOpen(true);

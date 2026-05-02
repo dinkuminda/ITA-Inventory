@@ -75,7 +75,7 @@ export const authService = {
       id: data.id,
       email: data.email,
       displayName: data.display_name,
-      role: data.role
+      role: data.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : data.role
     } as UserProfile;
   }
 };
