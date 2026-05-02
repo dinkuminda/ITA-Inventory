@@ -12,6 +12,7 @@
         "assignedTo": { "type": "string" },
         "roles": { "type": "string" },
         "location": { "type": "string" },
+        "specificLocation": { "type": "string" },
         "date": { "type": "string" },
         "remark": { "type": "string" },
         "notes": { "type": "string" },

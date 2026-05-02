@@ -25,6 +25,7 @@ export interface Asset {
   assignedTo?: string;
   roles?: string;
   location?: string;
+  specificLocation?: string;
   date?: string;
   remark?: string;
   notes?: string;

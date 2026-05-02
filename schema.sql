@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.assets (
   "assignedTo" TEXT,
   roles TEXT,
   location TEXT,
+  "specificLocation" TEXT,
   date TEXT,
   remark TEXT,
   notes TEXT,

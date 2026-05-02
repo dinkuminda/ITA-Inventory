@@ -42,6 +42,7 @@ export function AssetsList() {
     serialNumber: '',
     status: AssetStatus.IN_STOCK,
     location: LOCATIONS[0],
+    specificLocation: '',
     assignedTo: '',
     remark: '',
   });
@@ -96,6 +97,7 @@ export function AssetsList() {
       serialNumber: '',
       status: AssetStatus.IN_STOCK,
       location: LOCATIONS[0],
+      specificLocation: '',
       assignedTo: '',
       remark: '',
     });
@@ -129,6 +131,7 @@ export function AssetsList() {
             serialNumber: item.serialNumber || item.SerialNumber || item['Serial No.'] || "",
             status: (item.status || item.Status || AssetStatus.IN_STOCK) as AssetStatus,
             location: item.location || item.Location || LOCATIONS[0],
+            specificLocation: item.specificLocation || item.SpecificLocation || item['Specific Location'] || "",
             assignedTo: item.assignedTo || item.AssignedTo || item['Assigned To'] || "",
             remark: item.remark || item.Remark || item.Notes || "",
             approvalStatus: ApprovalStatus.APPROVED,
@@ -157,6 +160,8 @@ export function AssetsList() {
   const columns = [
     { header: 'Name', accessorKey: 'name' as keyof Asset },
     { header: 'Type', accessorKey: 'type' as keyof Asset },
+    { header: 'Location', accessorKey: 'location' as keyof Asset },
+    { header: 'Specific Location', accessorKey: 'specificLocation' as keyof Asset },
     { header: 'Serial No.', accessorKey: 'serialNumber' as keyof Asset },
     {
       header: 'Status',
@@ -210,6 +215,7 @@ export function AssetsList() {
               serialNumber: asset.serialNumber || '',
               status: asset.status,
               location: asset.location || LOCATIONS[0],
+              specificLocation: asset.specificLocation || '',
               assignedTo: asset.assignedTo || '',
               remark: asset.remark || '',
             });
@@ -334,6 +340,16 @@ export function AssetsList() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="specificLocation" className="text-right whitespace-nowrap">Specific Location</Label>
+              <Input
+                id="specificLocation"
+                className="col-span-3"
+                value={formData.specificLocation}
+                onChange={(e) => setFormData({ ...formData, specificLocation: e.target.value })}
+                placeholder="Room #, Desk ID, etc."
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="assignedTo" className="text-right">Assigned</Label>
