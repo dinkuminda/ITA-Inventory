@@ -93,9 +93,9 @@ export default function App() {
             <div className="mx-auto bg-primary text-primary-foreground w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Laptop size={28} />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">AssetFlow IT</h1>
+            <h1 className="text-2xl font-bold tracking-tight">ICS IT Admin Directorate Inventory Mgt System</h1>
             <p className="text-muted-foreground">
-              {isSignUp ? "Create an administrator account" : "Sign in to manage your inventory"}
+              {isSignUp ? "Create an administrator account" : ""}
             </p>
           </div>
           <form onSubmit={handleAuth} className="space-y-4">
