@@ -12,6 +12,9 @@ export const ASSET_TYPES = [
   'Printer',
   'Server',
   'Networking Gear',
+  'Core Switch',
+  'Switch',
+  'SFP',
   'Other'
 ];
 
