@@ -5,6 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
+import { PlusCircle } from "lucide-react";
 import { Asset, AssetStatus, ApprovalStatus, UserRole } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -194,6 +195,10 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Assets</h2>
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 transition-all">
+          <PlusCircle className="h-5 w-5" />
+          Add Asset
+        </Button>
       </div>
       
       {loading ? (
@@ -206,7 +211,7 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
           title="Asset"
           data={assets}
           columns={columns}
-          onAdd={isAdmin ? () => { resetForm(); setIsDialogOpen(true); } : undefined}
+          onAdd={undefined}
           onExport={handleExport}
           onImport={isAdmin ? handleImport : undefined}
           onEdit={isAdmin ? (asset) => { 

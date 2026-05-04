@@ -5,6 +5,8 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
+import { PlusCircle } from "lucide-react";
+import { Asset, AssetStatus, ApprovalStatus, UserRole } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { supabaseService } from '@/src/lib/supabaseService';
@@ -34,11 +36,13 @@ interface Employee {
   joinDate: string;
 }
 
-export function StaffList() {
+export function StaffList({ userRole }: { userRole?: UserRole }) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+
+  const isAdmin = userRole === UserRole.ADMIN;
 
   const [formData, setFormData] = useState({
     employeeId: '',
@@ -170,6 +174,10 @@ export function StaffList() {
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Staff Management</h2>
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 transition-all">
+          <PlusCircle className="h-5 w-5" />
+          Add Employee
+        </Button>
       </div>
       {loading ? (
         <div className="animate-pulse space-y-4">
@@ -180,10 +188,10 @@ export function StaffList() {
           title="Employee"
           data={employees}
           columns={columns}
-          onAdd={() => { resetForm(); setIsDialogOpen(true); }}
+          onAdd={undefined}
           onExport={handleExport}
-          onImport={handleImport}
-          onEdit={(employee) => {
+          onImport={isAdmin ? handleImport : undefined}
+          onEdit={isAdmin ? (employee) => {
             setEditingEmployee(employee);
             setFormData({
               employeeId: employee.employeeId,
@@ -195,8 +203,8 @@ export function StaffList() {
               joinDate: employee.joinDate,
             });
             setIsDialogOpen(true);
-          }}
-          onDelete={handleDelete}
+          } : undefined}
+          onDelete={isAdmin ? handleDelete : undefined}
           useDirectActions={true}
           searchPlaceholder="Search staff..."
         />

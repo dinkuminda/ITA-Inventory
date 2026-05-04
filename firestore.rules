@@ -20,7 +20,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && getUserProfile().role == 'Admin';
+      return isSignedIn() && (getUserProfile().role == 'Admin' || request.auth.token.email == 'dinkuh12@gmail.com');
     }
 
     function isValidId(id) {

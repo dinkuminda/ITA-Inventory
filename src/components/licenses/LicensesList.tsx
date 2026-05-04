@@ -5,6 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
+import { PlusCircle } from "lucide-react";
 import { License, LicenseStatus, UserRole } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -174,6 +175,10 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Licenses</h2>
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-200 transition-all">
+          <PlusCircle className="h-5 w-5" />
+          Add License
+        </Button>
       </div>
       {loading ? (
         <div className="animate-pulse space-y-4">
@@ -185,7 +190,7 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
           title="License"
           data={licenses}
           columns={columns}
-          onAdd={isAdmin ? () => { resetForm(); setIsDialogOpen(true); } : undefined}
+          onAdd={undefined}
           onExport={handleExport}
           onImport={isAdmin ? handleImport : undefined}
           onEdit={isAdmin ? (license) => { 

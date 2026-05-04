@@ -5,6 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
+import { PlusCircle } from "lucide-react";
 import { MaintenanceRecord, MaintenanceStatus, UserRole } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -170,6 +171,10 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Maintenance</h2>
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-200 transition-all">
+          <PlusCircle className="h-5 w-5" />
+          Add Record
+        </Button>
       </div>
       {loading ? (
         <div className="animate-pulse space-y-4">
@@ -180,7 +185,7 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
           title="Record"
           data={records}
           columns={columns}
-          onAdd={isAdmin ? () => { resetForm(); setIsDialogOpen(true); } : undefined}
+          onAdd={undefined}
           onExport={handleExport}
           onImport={isAdmin ? handleImport : undefined}
           onEdit={isAdmin ? (record) => {

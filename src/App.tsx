@@ -15,7 +15,7 @@ import { StaffList } from '@/src/components/staff/StaffList';
 import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Laptop, Lock, Users as UsersIcon, Settings as SettingsIcon, UserPlus } from 'lucide-react';
+import { Laptop, Lock, Users as UsersIcon, Settings as SettingsIcon, UserPlus, ShieldAlert } from 'lucide-react';
 import { authService } from './lib/authService';
 import { UserProfile, UserRole } from './types';
 import { toast } from 'sonner';
@@ -160,7 +160,7 @@ export default function App() {
           user={{ 
             email: user.email || '', 
             displayName: profile?.displayName || user.displayName || 'User',
-            role: profile?.role || UserRole.STAFF
+            role: user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : (profile?.role || UserRole.STAFF)
           }}
           onLogout={handleLogout}
         />
@@ -169,22 +169,40 @@ export default function App() {
             <SidebarTrigger />
             <div className="flex-1">
               <span className="text-sm font-medium text-muted-foreground uppercase tracking-widest px-2">
-                {profile?.role || 'Guest'}
+                {user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : (profile?.role || 'Guest')}
               </span>
             </div>
           </div>
           <div className="p-4 md:p-8">
             {activeTab === 'dashboard' && <Dashboard />}
-            {activeTab === 'assets' && <AssetsList userRole={profile?.role} />}
-            {activeTab === 'licenses' && <LicensesList userRole={profile?.role} />}
-            {activeTab === 'maintenance' && <MaintenanceList userRole={profile?.role} />}
-            {activeTab === 'staff' && <StaffList />}
+            {activeTab === 'assets' && <AssetsList userRole={user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : profile?.role} />}
+            {activeTab === 'licenses' && <LicensesList userRole={user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : profile?.role} />}
+            {activeTab === 'maintenance' && <MaintenanceList userRole={user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : profile?.role} />}
+            {activeTab === 'staff' && (
+              (profile?.role === UserRole.ADMIN || user.email === 'dinkuh12@gmail.com') ? (
+                <StaffList userRole={user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : profile?.role} />
+              ) : (
+                <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
+                  <ShieldAlert size={48} className="text-destructive" />
+                  <h3 className="text-xl font-semibold">Access Denied</h3>
+                  <p className="text-muted-foreground max-w-xs">You do not have permission to view staff management.</p>
+                </div>
+              )
+            )}
             {activeTab === 'settings' && (
-              <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
-                <SettingsIcon size={48} className="text-muted-foreground" />
-                <h2 className="text-xl font-semibold">System Settings</h2>
-                <p className="text-muted-foreground max-w-xs">Configure notification thresholds, asset categories, and user roles.</p>
-              </div>
+              (profile?.role === UserRole.ADMIN || user.email === 'dinkuh12@gmail.com') ? (
+                <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
+                  <SettingsIcon size={48} className="text-muted-foreground" />
+                  <h2 className="text-xl font-semibold">System Settings</h2>
+                  <p className="text-muted-foreground max-w-xs">Configure notification thresholds, asset categories, and user roles.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
+                  <ShieldAlert size={48} className="text-destructive" />
+                  <h3 className="text-xl font-semibold">Access Denied</h3>
+                  <p className="text-muted-foreground max-w-xs">You do not have permission to view settings.</p>
+                </div>
+              )
             )}
           </div>
         </main>
