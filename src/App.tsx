@@ -36,7 +36,11 @@ export default function App() {
     const unsubscribe = authService.subscribeAuth(async (authUser) => {
       setUser(authUser);
       if (authUser) {
+        const isAdminEmail = authUser.email === 'dinkuh12@gmail.com';
         const userProfile = await authService.getUserProfile(authUser.uid);
+        if (isAdminEmail && userProfile && userProfile.role !== UserRole.ADMIN) {
+          userProfile.role = UserRole.ADMIN;
+        }
         setProfile(userProfile);
       } else {
         setProfile(null);
@@ -159,8 +163,8 @@ export default function App() {
           setActiveTab={setActiveTab}
           user={{ 
             email: user.email || '', 
-            displayName: profile?.displayName || user.displayName || 'User',
-            role: user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : (profile?.role || UserRole.STAFF)
+            displayName: profile?.displayName || user.displayName || 'Admin',
+            role: profile?.role || UserRole.STAFF
           }}
           onLogout={handleLogout}
         />
@@ -169,18 +173,18 @@ export default function App() {
             <SidebarTrigger />
             <div className="flex-1">
               <span className="text-sm font-medium text-muted-foreground uppercase tracking-widest px-2">
-                {user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : (profile?.role || 'Guest')}
+                {profile?.role || 'Guest'}
               </span>
             </div>
           </div>
           <div className="p-4 md:p-8">
             {activeTab === 'dashboard' && <Dashboard />}
-            {activeTab === 'assets' && <AssetsList userRole={user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : profile?.role} />}
-            {activeTab === 'licenses' && <LicensesList userRole={user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : profile?.role} />}
-            {activeTab === 'maintenance' && <MaintenanceList userRole={user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : profile?.role} />}
+            {activeTab === 'assets' && <AssetsList userRole={profile?.role} />}
+            {activeTab === 'licenses' && <LicensesList userRole={profile?.role} />}
+            {activeTab === 'maintenance' && <MaintenanceList userRole={profile?.role} />}
             {activeTab === 'staff' && (
-              (profile?.role === UserRole.ADMIN || user.email === 'dinkuh12@gmail.com') ? (
-                <StaffList userRole={user.email === 'dinkuh12@gmail.com' ? UserRole.ADMIN : profile?.role} />
+              profile?.role === UserRole.ADMIN ? (
+                <StaffList userRole={profile?.role} />
               ) : (
                 <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
                   <ShieldAlert size={48} className="text-destructive" />
@@ -190,7 +194,7 @@ export default function App() {
               )
             )}
             {activeTab === 'settings' && (
-              (profile?.role === UserRole.ADMIN || user.email === 'dinkuh12@gmail.com') ? (
+              profile?.role === UserRole.ADMIN ? (
                 <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
                   <SettingsIcon size={48} className="text-muted-foreground" />
                   <h2 className="text-xl font-semibold">System Settings</h2>
