@@ -53,7 +53,7 @@ export const supabaseService = {
       
     if (error) {
       console.error(`Supabase Error (add ${table}):`, error);
-      return null;
+      throw error;
     }
     return result as T;
   },
@@ -74,6 +74,7 @@ export const supabaseService = {
       
     if (error) {
       console.error(`Supabase Error (update ${table}):`, error);
+      throw error;
     }
   },
 

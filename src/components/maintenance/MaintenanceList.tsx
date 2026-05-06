@@ -6,7 +6,7 @@
 import * as React from "react";
 import { useState, useEffect } from 'react';
 import { PlusCircle } from "lucide-react";
-import { MaintenanceRecord, MaintenanceStatus, UserRole } from '@/src/types';
+import { Asset, MaintenanceRecord, MaintenanceStatus, UserRole } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { supabaseService } from '@/src/lib/supabaseService';
@@ -69,8 +69,9 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
       }
       setIsDialogOpen(false);
       resetForm();
-    } catch (error) {
-      toast.error("Failed to save record");
+    } catch (error: any) {
+      console.error("Maintenance save error:", error);
+      toast.error(error?.message || "Failed to save record");
     }
   };
 
@@ -96,6 +97,12 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
     });
     setEditingRecord(null);
   };
+
+  const [assets, setAssets] = useState<Asset[]>([]);
+  useEffect(() => {
+    const unsubscribe = supabaseService.subscribeCollection<Asset>('assets', setAssets);
+    return () => unsubscribe();
+  }, []);
 
   const handleExport = () => {
     const exportData = records.map(({ id, createdAt, updatedAt, ...rest }: any) => rest);
@@ -142,6 +149,19 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
 
   const columns = [
     { header: 'Date', accessorKey: 'date' as keyof MaintenanceRecord },
+    { 
+      header: 'Asset', 
+      accessorKey: 'assetId' as keyof MaintenanceRecord,
+      cell: (item: MaintenanceRecord) => {
+        const asset = assets.find(a => a.id === item.assetId);
+        return asset ? (
+          <div className="flex flex-col">
+            <span className="font-medium text-sm">{asset.name}</span>
+            <span className="text-xs text-muted-foreground">{asset.serialNumber || 'No S/N'}</span>
+          </div>
+        ) : 'Unknown';
+      }
+    },
     { header: 'Issue', accessorKey: 'issueDescription' as keyof MaintenanceRecord },
     {
       header: 'Status',
@@ -215,6 +235,26 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="assetId" className="text-right">Asset</Label>
+              <div className="col-span-3">
+                <Select 
+                  value={formData.assetId} 
+                  onValueChange={(val) => setFormData({ ...formData, assetId: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select asset" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assets.map(a => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.name} | {a.location} {a.specificLocation ? `(${a.specificLocation})` : ''} | {a.serialNumber || 'No S/N'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="issue" className="text-right">Issue</Label>
               <Input

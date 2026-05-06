@@ -41,6 +41,7 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
     usedSeats: 0,
     status: LicenseStatus.ACTIVE,
     expiryDate: '',
+    key: '',
   });
 
   useEffect(() => {
@@ -53,23 +54,26 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
 
   const handleSave = async () => {
     try {
+      const dataToSave = {
+        ...formData,
+        key: formData.key.trim() || null,
+        updatedAt: new Date().toISOString(),
+      };
+
       if (editingLicense) {
-        await supabaseService.updateDocument('licenses', editingLicense.id, {
-          ...formData,
-          updatedAt: new Date().toISOString(),
-        });
+        await supabaseService.updateDocument('licenses', editingLicense.id, dataToSave);
         toast.success("License updated successfully");
       } else {
         await supabaseService.addDocument('licenses', {
-          ...formData,
+          ...dataToSave,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         });
         toast.success("License added successfully");
       }
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
+      console.error("License save error:", error);
       toast.error("Failed to save license");
     }
   };
@@ -93,6 +97,7 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
       usedSeats: 0,
       status: LicenseStatus.ACTIVE,
       expiryDate: '',
+      key: '',
     });
     setEditingLicense(null);
   };
@@ -236,6 +241,16 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
                 className="col-span-3"
                 value={formData.vendor}
                 onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="key" className="text-right">License Key</Label>
+              <Input
+                id="key"
+                className="col-span-3"
+                value={formData.key}
+                onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+                placeholder="XXXX-XXXX-XXXX-XXXX"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">

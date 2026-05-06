@@ -37,9 +37,19 @@ export default function App() {
       setUser(authUser);
       if (authUser) {
         const isAdminEmail = authUser.email === 'dinkuh12@gmail.com';
-        const userProfile = await authService.getUserProfile(authUser.uid);
-        if (isAdminEmail && userProfile && userProfile.role !== UserRole.ADMIN) {
-          userProfile.role = UserRole.ADMIN;
+        let userProfile = await authService.getUserProfile(authUser.uid);
+        
+        if (isAdminEmail) {
+          if (!userProfile) {
+            userProfile = {
+              id: authUser.uid,
+              email: authUser.email || '',
+              displayName: authUser.user_metadata?.display_name || 'System Admin',
+              role: UserRole.ADMIN
+            };
+          } else if (userProfile.role !== UserRole.ADMIN) {
+            userProfile.role = UserRole.ADMIN;
+          }
         }
         setProfile(userProfile);
       } else {

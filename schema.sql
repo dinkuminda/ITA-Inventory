@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS public.assets (
   "specificLocation" TEXT,
   date TEXT,
   remark TEXT,
-  notes TEXT,
   "approvalStatus" TEXT DEFAULT 'Pending',
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS public.licenses (
   department TEXT,
   "expiryDate" TEXT,
   notes TEXT,
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

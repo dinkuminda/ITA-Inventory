@@ -30,6 +30,7 @@ export const DEPARTMENTS = [
 ];
 
 export const LOCATIONS = [
+  'Gotera HQ office',
   'Headquarters',
   'Branch Office A',
   'Branch Office B',

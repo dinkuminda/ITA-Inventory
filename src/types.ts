@@ -28,8 +28,8 @@ export interface Asset {
   specificLocation?: string;
   date?: string;
   remark?: string;
-  notes?: string;
   approvalStatus: ApprovalStatus;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -52,6 +52,7 @@ export interface License {
   department?: string;
   expiryDate?: string;
   notes?: string;
+  createdAt: string;
   updatedAt: string;
 }
 

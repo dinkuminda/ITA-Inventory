@@ -47,8 +47,30 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
     location: LOCATIONS[0],
     specificLocation: '',
     assignedTo: '',
+    roles: '',
+    date: new Date().toISOString().split('T')[0],
     remark: '',
   });
+
+  const [locationDetails, setLocationDetails] = useState({
+    floor: '',
+    side: ''
+  });
+
+  useEffect(() => {
+    if (formData.location === 'Gotera HQ office') {
+      const { floor, side } = locationDetails;
+      if (floor || side) {
+        const parts = [];
+        if (floor) parts.push(floor);
+        if (side) parts.push(side);
+        setFormData(prev => ({
+          ...prev,
+          specificLocation: parts.join(' - ')
+        }));
+      }
+    }
+  }, [locationDetails, formData.location]);
 
   useEffect(() => {
     const unsubscribe = supabaseService.subscribeCollection<Asset>('assets', (data) => {
@@ -60,25 +82,28 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
 
   const handleSave = async () => {
     try {
+      const dataToSave = {
+        ...formData,
+        serialNumber: formData.serialNumber.trim() || null,
+        approvalStatus: ApprovalStatus.APPROVED,
+        updatedAt: new Date().toISOString(),
+      };
+
       if (editingAsset) {
-        await supabaseService.updateDocument('assets', editingAsset.id, {
-          ...formData,
-          updatedAt: new Date().toISOString(),
-        });
+        await supabaseService.updateDocument('assets', editingAsset.id, dataToSave);
         toast.success("Asset updated successfully");
       } else {
         await supabaseService.addDocument('assets', {
-          ...formData,
-          approvalStatus: ApprovalStatus.APPROVED,
-          updatedAt: new Date().toISOString(),
+          ...dataToSave,
           createdAt: new Date().toISOString(),
         });
         toast.success("Asset added successfully");
       }
       setIsDialogOpen(false);
       resetForm();
-    } catch (error) {
-      toast.error("Failed to save asset");
+    } catch (error: any) {
+      console.error("Save error:", error);
+      toast.error(error?.message || error?.details || "Failed to save asset");
     }
   };
 
@@ -102,8 +127,11 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
       location: LOCATIONS[0],
       specificLocation: '',
       assignedTo: '',
+      roles: '',
+      date: new Date().toISOString().split('T')[0],
       remark: '',
     });
+    setLocationDetails({ floor: '', side: '' });
     setEditingAsset(null);
   };
 
@@ -131,11 +159,13 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
           const formattedAssets = importedData.map(item => ({
             name: item.name || item.Name || "Unnamed Asset",
             type: item.type || item.Type || ASSET_TYPES[0],
-            serialNumber: item.serialNumber || item.SerialNumber || item['Serial No.'] || "",
+            serialNumber: (item.serialNumber || item.SerialNumber || item['Serial No.'] || "").trim() || null,
             status: (item.status || item.Status || AssetStatus.IN_STOCK) as AssetStatus,
             location: item.location || item.Location || LOCATIONS[0],
             specificLocation: item.specificLocation || item.SpecificLocation || item['Specific Location'] || "",
             assignedTo: item.assignedTo || item.AssignedTo || item['Assigned To'] || "",
+            roles: item.roles || item.Roles || "",
+            date: item.date || item.Date || item['Acquisition Date'] || new Date().toISOString().split('T')[0],
             remark: item.remark || item.Remark || item.Notes || "",
             approvalStatus: ApprovalStatus.APPROVED,
             createdAt: new Date().toISOString(),
@@ -184,6 +214,9 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
       }
     },
     { header: 'Assigned To', accessorKey: 'assignedTo' as keyof Asset },
+    { header: 'Roles', accessorKey: 'roles' as keyof Asset },
+    { header: 'Acquisition Date', accessorKey: 'date' as keyof Asset },
+    { header: 'Remark', accessorKey: 'remark' as keyof Asset },
     {
       header: 'Last Updated',
       accessorKey: 'updatedAt' as keyof Asset,
@@ -216,6 +249,17 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
           onImport={isAdmin ? handleImport : undefined}
           onEdit={isAdmin ? (asset) => { 
             setEditingAsset(asset);
+            const isGotera = asset.location === 'Gotera HQ office';
+            let floor = '';
+            let side = '';
+            
+            if (isGotera && asset.specificLocation) {
+              const parts = asset.specificLocation.split(' - ');
+              floor = parts[0] || '';
+              side = parts[1] || '';
+            }
+
+            setLocationDetails({ floor, side });
             setFormData({
               name: asset.name,
               type: asset.type,
@@ -224,6 +268,8 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
               location: asset.location || LOCATIONS[0],
               specificLocation: asset.specificLocation || '',
               assignedTo: asset.assignedTo || '',
+              roles: asset.roles || '',
+              date: asset.date || new Date().toISOString().split('T')[0],
               remark: asset.remark || '',
             });
             setIsDialogOpen(true); 
@@ -277,11 +323,9 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{editingAsset ? 'Edit Asset' : 'Add New Asset'}</DialogTitle>
-            <DialogDescription>
-              Enter the hardware details below to keep your inventory accurate.
-            </DialogDescription>
+            <DialogDescription></DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">Name</Label>
               <Input
@@ -349,14 +393,47 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="specificLocation" className="text-right whitespace-nowrap">Specific Location</Label>
-              <Input
-                id="specificLocation"
-                className="col-span-3"
-                value={formData.specificLocation}
-                onChange={(e) => setFormData({ ...formData, specificLocation: e.target.value })}
-                placeholder="Room #, Desk ID, etc."
-              />
+              <Label htmlFor="specificLocation" className="text-right whitespace-nowrap text-xs">Specific Location</Label>
+              <div className="col-span-3 space-y-2">
+                {formData.location === 'Gotera HQ office' ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select 
+                      value={locationDetails.floor} 
+                      onValueChange={(val) => setLocationDetails({ ...locationDetails, floor: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Floor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Ground Floor">Ground Floor</SelectItem>
+                        {[...Array(13)].map((_, i) => (
+                          <SelectItem key={i + 1} value={`${i + 1}th Floor`}>{i + 1}th Floor</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select 
+                      value={locationDetails.side} 
+                      onValueChange={(val) => setLocationDetails({ ...locationDetails, side: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Side" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Left Side">Left Side</SelectItem>
+                        <SelectItem value="Right Side">Right Side</SelectItem>
+                        <SelectItem value="Center">Center</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <Input
+                    id="specificLocation"
+                    value={formData.specificLocation}
+                    onChange={(e) => setFormData({ ...formData, specificLocation: e.target.value })}
+                    placeholder="Room #, Desk ID, etc."
+                  />
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="assignedTo" className="text-right">Assigned</Label>
@@ -369,13 +446,33 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="remark" className="text-right">Notes</Label>
+              <Label htmlFor="roles" className="text-right">Roles</Label>
+              <Input
+                id="roles"
+                className="col-span-3"
+                value={formData.roles}
+                onChange={(e) => setFormData({ ...formData, roles: e.target.value })}
+                placeholder="User departments/roles"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="date" className="text-right whitespace-nowrap text-xs">Acquisition Date</Label>
+              <Input
+                id="date"
+                type="date"
+                className="col-span-3"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4 pb-2">
+              <Label htmlFor="remark" className="text-right">Remark</Label>
               <Input
                 id="remark"
                 className="col-span-3"
                 value={formData.remark}
                 onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                placeholder="Additional details..."
+                placeholder="Short remark..."
               />
             </div>
           </div>
