@@ -26,13 +26,17 @@ import { toast } from "sonner";
 import Papa from 'papaparse';
 import { format } from 'date-fns';
 
-export function LicensesList({ userRole }: { userRole?: UserRole }) {
+export function LicensesList({ userRole, userEmail }: { userRole?: UserRole, userEmail?: string }) {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLicense, setEditingLicense] = useState<License | null>(null);
 
   const isAdmin = userRole === UserRole.ADMIN;
+  const isStaff = userRole === UserRole.STAFF;
+  const hasEditPermission = isAdmin || isStaff;
+
+  const displayedLicenses = isAdmin ? licenses : licenses.filter(l => l.assignedTo === userEmail);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -56,6 +60,7 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
     try {
       const dataToSave = {
         ...formData,
+        assignedTo: isStaff ? (userEmail || '') : '',
         key: formData.key.trim() || null,
         updatedAt: new Date().toISOString(),
       };
@@ -72,9 +77,9 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
       }
       setIsDialogOpen(false);
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error("License save error:", error);
-      toast.error("Failed to save license");
+      toast.error(error.message || "Failed to save license");
     }
   };
 
@@ -103,7 +108,7 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
   };
 
   const handleExport = () => {
-    const exportData = licenses.map(({ id, updatedAt, ...rest }: any) => rest);
+    const exportData = displayedLicenses.map(({ id, updatedAt, ...rest }: any) => rest);
     const csv = Papa.unparse(exportData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -129,6 +134,7 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
             seats: parseInt(item.seats || item.Seats || '1') || 1,
             usedSeats: parseInt(item.usedSeats || item['Used Seats'] || '0') || 0,
             status: (item.status || item.Status || LicenseStatus.ACTIVE) as LicenseStatus,
+            assignedTo: isStaff ? (userEmail || '') : (item.assignedTo || item.AssignedTo || ''),
             expiryDate: item.expiryDate || item.Expiry || item['Expiry Date'] || '',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -138,8 +144,9 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
             await supabaseService.addDocuments('licenses', formatted);
             toast.success(`Successfully imported ${formatted.length} licenses`);
           }
-        } catch (error) {
-          toast.error("Import failed");
+        } catch (error: any) {
+          console.error("Import failed:", error);
+          toast.error(error.message || "Import failed");
         }
       }
     });
@@ -193,12 +200,12 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
       ) : (
         <DataTable
           title="License"
-          data={licenses}
+          data={displayedLicenses}
           columns={columns}
           onAdd={undefined}
           onExport={handleExport}
-          onImport={isAdmin ? handleImport : undefined}
-          onEdit={isAdmin ? (license) => { 
+          onImport={hasEditPermission ? handleImport : undefined}
+          onEdit={hasEditPermission ? (license) => { 
             setEditingLicense(license);
             setFormData({
               name: license.name,
@@ -207,6 +214,7 @@ export function LicensesList({ userRole }: { userRole?: UserRole }) {
               usedSeats: license.usedSeats,
               status: license.status,
               expiryDate: license.expiryDate || '',
+              key: license.key || '',
             });
             setIsDialogOpen(true);
           } : undefined}

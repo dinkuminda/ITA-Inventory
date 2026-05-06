@@ -5,6 +5,7 @@
 
 import {
   LayoutDashboard,
+  Boxes,
   Laptop,
   Key,
   ShieldAlert,
@@ -55,7 +56,7 @@ export function AppSidebar({ activeTab, setActiveTab, user, onLogout }: AppSideb
       <SidebarHeader className="p-4 border-b">
         <div className="flex items-center gap-2 px-2">
           <div className="bg-primary text-primary-foreground p-1.5 rounded-lg">
-            <Laptop size={20} />
+            <Boxes size={20} />
           </div>
           <span className="font-bold text-lg tracking-tight">ICS IT Inventory</span>
         </div>

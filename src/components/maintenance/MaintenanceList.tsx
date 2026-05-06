@@ -26,13 +26,28 @@ import { toast } from "sonner";
 import Papa from 'papaparse';
 import { format } from 'date-fns';
 
-export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
+export function MaintenanceList({ userRole, userEmail }: { userRole?: UserRole, userEmail?: string }) {
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
 
+  const [assets, setAssets] = useState<Asset[]>([]);
+  useEffect(() => {
+    const unsubscribe = supabaseService.subscribeCollection<Asset>('assets', setAssets);
+    return () => unsubscribe();
+  }, []);
+
   const isAdmin = userRole === UserRole.ADMIN;
+  const isStaff = userRole === UserRole.STAFF;
+  const hasEditPermission = isAdmin || isStaff;
+
+  const displayedRecords = isAdmin ? records : records.filter(r => {
+    const asset = assets.find(a => a.id === r.assetId);
+    return asset && asset.assignedTo === userEmail;
+  });
+
+  const displayedAssets = isAdmin ? assets : assets.filter(a => a.assignedTo === userEmail);
 
   const [formData, setFormData] = useState({
     assetId: '',
@@ -71,7 +86,7 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
       resetForm();
     } catch (error: any) {
       console.error("Maintenance save error:", error);
-      toast.error(error?.message || "Failed to save record");
+      toast.error(error.message || "Failed to save record");
     }
   };
 
@@ -98,14 +113,8 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
     setEditingRecord(null);
   };
 
-  const [assets, setAssets] = useState<Asset[]>([]);
-  useEffect(() => {
-    const unsubscribe = supabaseService.subscribeCollection<Asset>('assets', setAssets);
-    return () => unsubscribe();
-  }, []);
-
   const handleExport = () => {
-    const exportData = records.map(({ id, createdAt, updatedAt, ...rest }: any) => rest);
+    const exportData = displayedRecords.map(({ id, createdAt, updatedAt, ...rest }: any) => rest);
     const csv = Papa.unparse(exportData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -140,8 +149,9 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
             await supabaseService.addDocuments('maintenance', formatted);
             toast.success(`Successfully imported ${formatted.length} records`);
           }
-        } catch (error) {
-          toast.error("Import failed");
+        } catch (error: any) {
+          console.error("Import failed:", error);
+          toast.error(error.message || "Import failed");
         }
       }
     });
@@ -203,12 +213,12 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
       ) : (
         <DataTable
           title="Record"
-          data={records}
+          data={displayedRecords}
           columns={columns}
           onAdd={undefined}
           onExport={handleExport}
-          onImport={isAdmin ? handleImport : undefined}
-          onEdit={isAdmin ? (record) => {
+          onImport={hasEditPermission ? handleImport : undefined}
+          onEdit={hasEditPermission ? (record) => {
             setEditingRecord(record);
             setFormData({
               assetId: record.assetId,
@@ -246,7 +256,7 @@ export function MaintenanceList({ userRole }: { userRole?: UserRole }) {
                     <SelectValue placeholder="Select asset" />
                   </SelectTrigger>
                   <SelectContent>
-                    {assets.map(a => (
+                    {displayedAssets.map(a => (
                       <SelectItem key={a.id} value={a.id}>
                         {a.name} | {a.location} {a.specificLocation ? `(${a.specificLocation})` : ''} | {a.serialNumber || 'No S/N'}
                       </SelectItem>

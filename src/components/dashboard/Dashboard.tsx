@@ -27,8 +27,9 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { Asset, AssetStatus, License, MaintenanceRecord } from '@/src/types';
+import { Asset, AssetStatus, License, MaintenanceRecord, UserRole } from '@/src/types';
 import { supabaseService } from '@/src/lib/supabaseService';
+import { format } from 'date-fns';
 
 import { 
   Card as ShadCard, 
@@ -38,11 +39,14 @@ import {
   CardDescription as ShadCardDescription 
 } from '@/components/ui/card';
 
-export function Dashboard() {
+export function Dashboard({ userRole, userEmail }: { userRole?: UserRole, userEmail?: string }) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [licenses, setLicenses] = useState<License[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+
+  const isAdmin = userRole === UserRole.ADMIN;
+  const isStaff = userRole === UserRole.STAFF;
 
   useEffect(() => {
     const unsubAssets = supabaseService.subscribeCollection<Asset>('assets', setAssets);
@@ -58,14 +62,21 @@ export function Dashboard() {
     };
   }, []);
 
-  const totalAssets = assets.length;
-  const activeLicenses = licenses.length;
-  const pendingMaintenance = maintenance.filter(m => m.status !== 'Completed').length;
-  const assignedUsers = employees.length;
+  const filteredAssets = isAdmin ? assets : assets.filter(a => a.assignedTo === userEmail);
+  const filteredLicenses = isAdmin ? licenses : licenses.filter(l => l.assignedTo === userEmail);
+  const filteredMaintenance = isAdmin ? maintenance : maintenance.filter(m => {
+    const asset = assets.find(a => a.id === m.assetId);
+    return asset && asset.assignedTo === userEmail;
+  });
+
+  const totalAssets = filteredAssets.length;
+  const activeLicenses = filteredLicenses.length;
+  const pendingMaintenance = filteredMaintenance.filter(m => m.status !== 'Completed').length;
+  const assignedUsers = isAdmin ? employees.length : employees.filter(e => e.email === userEmail).length;
 
   // Chart Logic
   const assetTypeCounts: Record<string, number> = {};
-  assets.forEach(a => {
+  filteredAssets.forEach(a => {
     assetTypeCounts[a.type] = (assetTypeCounts[a.type] || 0) + 1;
   });
   
@@ -81,7 +92,7 @@ export function Dashboard() {
     [AssetStatus.MAINTENANCE]: 0,
     [AssetStatus.RETIRED]: 0,
   };
-  assets.forEach(a => {
+  filteredAssets.forEach(a => {
     if (statusCounts[a.status] !== undefined) {
       statusCounts[a.status] += 1;
     }
@@ -110,7 +121,7 @@ export function Dashboard() {
         <ShadCard className="overflow-hidden border-none shadow-md ring-1 ring-blue-100 bg-white group hover:shadow-lg transition-all duration-300">
           <div className="h-1 w-full bg-blue-500" />
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-sm font-semibold text-blue-900">Total Assets</ShadCardTitle>
+            <ShadCardTitle className="text-sm font-semibold text-blue-900">{isStaff ? 'My Assets' : 'Total Assets'}</ShadCardTitle>
             <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
               <Laptop className="h-4 w-4 text-blue-600" />
             </div>
@@ -118,7 +129,7 @@ export function Dashboard() {
           <ShadCardContent>
             <div className="text-3xl font-bold text-blue-950">{totalAssets}</div>
             <p className="text-xs text-blue-600 font-medium flex items-center gap-1 mt-1">
-              Inventory units tracked <ArrowUpRight size={12} />
+              {isStaff ? 'Assets assigned to you' : 'Inventory units tracked'} <ArrowUpRight size={12} />
             </p>
           </ShadCardContent>
         </ShadCard>
@@ -126,7 +137,7 @@ export function Dashboard() {
         <ShadCard className="overflow-hidden border-none shadow-md ring-1 ring-purple-100 bg-white group hover:shadow-lg transition-all duration-300">
           <div className="h-1 w-full bg-purple-500" />
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-sm font-semibold text-purple-900">Software Licenses</ShadCardTitle>
+            <ShadCardTitle className="text-sm font-semibold text-purple-900">{isStaff ? 'My Licenses' : 'Software Licenses'}</ShadCardTitle>
             <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
               <Key className="h-4 w-4 text-purple-600" />
             </div>
@@ -134,7 +145,7 @@ export function Dashboard() {
           <ShadCardContent>
             <div className="text-3xl font-bold text-purple-950">{activeLicenses}</div>
             <p className="text-xs text-purple-600 font-medium mt-1">
-              Active subscriptions
+              {isStaff ? 'Your assigned licenses' : 'Active subscriptions'}
             </p>
           </ShadCardContent>
         </ShadCard>
@@ -142,7 +153,7 @@ export function Dashboard() {
         <ShadCard className="overflow-hidden border-none shadow-md ring-1 ring-amber-100 bg-white group hover:shadow-lg transition-all duration-300">
           <div className="h-1 w-full bg-amber-500" />
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-sm font-semibold text-amber-900">Pending Repairs</ShadCardTitle>
+            <ShadCardTitle className="text-sm font-semibold text-amber-900">{isStaff ? 'My Pending Repairs' : 'Pending Repairs'}</ShadCardTitle>
             <div className={`p-2 rounded-lg transition-colors ${pendingMaintenance > 0 ? 'bg-red-50 group-hover:bg-red-100' : 'bg-amber-50 group-hover:bg-amber-100'}`}>
               <ShieldAlert className={`h-4 w-4 ${pendingMaintenance > 0 ? 'text-red-500' : 'text-amber-600'}`} />
             </div>
@@ -152,7 +163,7 @@ export function Dashboard() {
               {pendingMaintenance}
             </div>
             <p className="text-xs text-amber-600 font-medium mt-1">
-              Active service tickets
+              {isStaff ? 'Tickets for your assets' : 'Active service tickets'}
             </p>
           </ShadCardContent>
         </ShadCard>
@@ -160,20 +171,25 @@ export function Dashboard() {
         <ShadCard className="overflow-hidden border-none shadow-md ring-1 ring-emerald-100 bg-white group hover:shadow-lg transition-all duration-300">
           <div className="h-1 w-full bg-emerald-500" />
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-sm font-semibold text-emerald-900">Staff Count</ShadCardTitle>
+            <ShadCardTitle className="text-sm font-semibold text-emerald-900">{isStaff ? 'Member Since' : 'Staff Count'}</ShadCardTitle>
             <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
               <Users className="h-4 w-4 text-emerald-600" />
             </div>
           </ShadCardHeader>
           <ShadCardContent>
-            <div className="text-3xl font-bold text-emerald-950">{assignedUsers}</div>
+            <div className="text-3xl font-bold text-emerald-950">
+              {isStaff ? (employees.find(e => e.email === userEmail)?.joinDate ? format(new Date(employees.find(e => e.email === userEmail).joinDate), 'MMM yyyy') : 'N/A') : assignedUsers}
+            </div>
             <div className="flex items-center gap-1">
-              <div className="w-full bg-emerald-50 h-1.5 rounded-full mt-2">
-                <div 
-                  className="bg-emerald-500 h-full rounded-full" 
-                  style={{ width: `${assignedUsers > 0 ? Math.min((assignedUsers / 50) * 100, 100) : 0}%` }}
-                />
-              </div>
+              {!isStaff && (
+                <div className="w-full bg-emerald-50 h-1.5 rounded-full mt-2">
+                  <div 
+                    className="bg-emerald-500 h-full rounded-full" 
+                    style={{ width: `${assignedUsers > 0 ? Math.min((assignedUsers / 50) * 100, 100) : 0}%` }}
+                  />
+                </div>
+              )}
+              {isStaff && <p className="text-xs text-emerald-600 font-medium mt-1">Employee verified</p>}
             </div>
           </ShadCardContent>
         </ShadCard>

@@ -74,6 +74,19 @@ export interface MaintenanceRecord {
   createdAt: string;
 }
 
+export interface Employee {
+  id: string;
+  employeeId: string;
+  fullName: string;
+  email: string;
+  department?: string;
+  position?: string;
+  status: string;
+  joinDate: string;
+  profileId?: string;
+  createdAt?: string;
+}
+
 export enum UserRole {
   ADMIN = 'Admin',
   STAFF = 'Staff'

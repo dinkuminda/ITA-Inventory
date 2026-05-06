@@ -1,5 +1,13 @@
+-- Clean start: Drop existing tables to ensure schema consistency
+DROP TABLE IF EXISTS public.audit_logs;
+DROP TABLE IF EXISTS public.maintenance;
+DROP TABLE IF EXISTS public.assets;
+DROP TABLE IF EXISTS public.licenses;
+DROP TABLE IF EXISTS public.employees;
+DROP TABLE IF EXISTS public.profiles;
+
 -- 1. Create PROFILES table (linked to auth.users)
-CREATE TABLE IF NOT EXISTS public.profiles (
+CREATE TABLE public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL UNIQUE,
   display_name TEXT,
@@ -8,79 +16,79 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- 2. Create ASSETS table
-CREATE TABLE IF NOT EXISTS public.assets (
+CREATE TABLE public.assets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   type TEXT NOT NULL,
-  "serialNumber" TEXT UNIQUE,
+  serial_number TEXT UNIQUE,
   status TEXT DEFAULT 'In Stock',
-  "assignedTo" TEXT,
+  assigned_to TEXT,
   roles TEXT,
   location TEXT,
-  "specificLocation" TEXT,
+  specific_location TEXT,
   date TEXT,
   remark TEXT,
-  "approvalStatus" TEXT DEFAULT 'Pending',
-  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  approval_status TEXT DEFAULT 'Pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 3. Create LICENSES table
-CREATE TABLE IF NOT EXISTS public.licenses (
+CREATE TABLE public.licenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   vendor TEXT,
   type TEXT,
-  "key" TEXT UNIQUE,
+  key TEXT UNIQUE,
   seats INTEGER DEFAULT 1,
-  "usedSeats" INTEGER DEFAULT 0,
+  used_seats INTEGER DEFAULT 0,
   status TEXT DEFAULT 'Active',
-  "assignedTo" TEXT,
+  assigned_to TEXT,
   department TEXT,
-  "expiryDate" TEXT,
+  expiry_date TEXT,
   notes TEXT,
-  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 4. Create MAINTENANCE table
-CREATE TABLE IF NOT EXISTS public.maintenance (
+CREATE TABLE public.maintenance (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "assetId" UUID REFERENCES public.assets(id) ON DELETE CASCADE,
-  "issueDescription" TEXT NOT NULL,
-  "actionTaken" TEXT,
-  "performedBy" TEXT,
-  "cost" DECIMAL(10,2) DEFAULT 0,
-  "status" TEXT DEFAULT 'Completed',
-  "date" DATE DEFAULT CURRENT_DATE,
-  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  asset_id UUID REFERENCES public.assets(id) ON DELETE CASCADE,
+  issue_description TEXT NOT NULL,
+  action_taken TEXT,
+  performed_by TEXT,
+  cost DECIMAL(10,2) DEFAULT 0,
+  status TEXT DEFAULT 'Completed',
+  date DATE DEFAULT CURRENT_DATE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 5. Create EMPLOYEES table
-CREATE TABLE IF NOT EXISTS public.employees (
+CREATE TABLE public.employees (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "employeeId" TEXT UNIQUE,
-  "fullName" TEXT NOT NULL,
+  employee_id TEXT UNIQUE,
+  full_name TEXT NOT NULL,
   email TEXT UNIQUE,
   department TEXT,
   position TEXT,
-  "joinDate" DATE DEFAULT CURRENT_DATE,
+  join_date DATE DEFAULT CURRENT_DATE,
   status TEXT DEFAULT 'Active',
-  "profileId" UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
-  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  profile_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 6. AUDIT_LOGS table
-CREATE TABLE IF NOT EXISTS public.audit_logs (
+CREATE TABLE public.audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "userId" UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
-  "action" TEXT NOT NULL,
-  "entityType" TEXT NOT NULL,
-  "entityId" TEXT,
-  "details" JSONB,
-  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT,
+  details JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Enable RLS for all tables
@@ -91,10 +99,11 @@ ALTER TABLE public.maintenance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Basic Policies (Allow all authenticated users for MVP, can be hardened later)
+-- Policies
 CREATE POLICY "Enable all access for authenticated users" ON public.profiles FOR ALL TO authenticated USING (true);
 CREATE POLICY "Enable all access for authenticated users" ON public.assets FOR ALL TO authenticated USING (true);
 CREATE POLICY "Enable all access for authenticated users" ON public.licenses FOR ALL TO authenticated USING (true);
 CREATE POLICY "Enable all access for authenticated users" ON public.maintenance FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable read for everyone to validate emails" ON public.employees FOR SELECT TO anon, authenticated USING (true);
 CREATE POLICY "Enable all access for authenticated users" ON public.employees FOR ALL TO authenticated USING (true);
 CREATE POLICY "Enable all access for authenticated users" ON public.audit_logs FOR ALL TO authenticated USING (true);

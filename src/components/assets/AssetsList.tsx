@@ -6,7 +6,7 @@
 import * as React from "react";
 import { useState, useEffect } from 'react';
 import { PlusCircle } from "lucide-react";
-import { Asset, AssetStatus, ApprovalStatus, UserRole } from '@/src/types';
+import { Asset, AssetStatus, ApprovalStatus, UserRole, Employee } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -28,8 +28,9 @@ import { toast } from "sonner";
 import { QRCodeSVG } from 'qrcode.react';
 import Papa from 'papaparse';
 
-export function AssetsList({ userRole }: { userRole?: UserRole }) {
+export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userEmail?: string }) {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
@@ -37,6 +38,10 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
   const [qrAsset, setQRAsset] = useState<Asset | null>(null);
 
   const isAdmin = userRole === UserRole.ADMIN;
+  const isStaff = userRole === UserRole.STAFF;
+  const hasEditPermission = isAdmin || isStaff;
+
+  const displayedAssets = isAdmin ? assets : assets.filter(a => a.assignedTo === userEmail);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -73,17 +78,26 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
   }, [locationDetails, formData.location]);
 
   useEffect(() => {
-    const unsubscribe = supabaseService.subscribeCollection<Asset>('assets', (data) => {
+    const unsubscribeAssets = supabaseService.subscribeCollection<Asset>('assets', (data) => {
       setAssets(data);
       setLoading(false);
     }, 'createdAt');
-    return () => unsubscribe();
+
+    const unsubscribeEmployees = supabaseService.subscribeCollection<Employee>('employees', (data) => {
+      setEmployees(data);
+    }, 'fullName');
+
+    return () => {
+      unsubscribeAssets();
+      unsubscribeEmployees();
+    };
   }, []);
 
   const handleSave = async () => {
     try {
       const dataToSave = {
         ...formData,
+        assignedTo: isStaff ? (userEmail || formData.assignedTo) : formData.assignedTo,
         serialNumber: formData.serialNumber.trim() || null,
         approvalStatus: ApprovalStatus.APPROVED,
         updatedAt: new Date().toISOString(),
@@ -126,7 +140,7 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
       status: AssetStatus.IN_STOCK,
       location: LOCATIONS[0],
       specificLocation: '',
-      assignedTo: '',
+      assignedTo: isStaff ? (userEmail || '') : '',
       roles: '',
       date: new Date().toISOString().split('T')[0],
       remark: '',
@@ -136,7 +150,7 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
   };
 
   const handleExport = () => {
-    const exportData = assets.map(({ id, createdAt, updatedAt, approvalStatus, ...rest }) => rest);
+    const exportData = displayedAssets.map(({ id, createdAt, updatedAt, approvalStatus, ...rest }) => rest);
     const csv = Papa.unparse(exportData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -163,7 +177,7 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
             status: (item.status || item.Status || AssetStatus.IN_STOCK) as AssetStatus,
             location: item.location || item.Location || LOCATIONS[0],
             specificLocation: item.specificLocation || item.SpecificLocation || item['Specific Location'] || "",
-            assignedTo: item.assignedTo || item.AssignedTo || item['Assigned To'] || "",
+            assignedTo: isStaff ? (userEmail || "") : (item.assignedTo || item.AssignedTo || item['Assigned To'] || ""),
             roles: item.roles || item.Roles || "",
             date: item.date || item.Date || item['Acquisition Date'] || new Date().toISOString().split('T')[0],
             remark: item.remark || item.Remark || item.Notes || "",
@@ -242,12 +256,12 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
       ) : (
         <DataTable
           title="Asset"
-          data={assets}
+          data={displayedAssets}
           columns={columns}
           onAdd={undefined}
           onExport={handleExport}
-          onImport={isAdmin ? handleImport : undefined}
-          onEdit={isAdmin ? (asset) => { 
+          onImport={hasEditPermission ? handleImport : undefined}
+          onEdit={hasEditPermission ? (asset) => { 
             setEditingAsset(asset);
             const isGotera = asset.location === 'Gotera HQ office';
             let floor = '';
@@ -437,13 +451,61 @@ export function AssetsList({ userRole }: { userRole?: UserRole }) {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="assignedTo" className="text-right">Assigned</Label>
-              <Input
-                id="assignedTo"
-                className="col-span-3"
-                value={formData.assignedTo}
-                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                placeholder="Employee Name"
-              />
+              <div className="col-span-3 space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    id="assignedTo"
+                    list="employee-list"
+                    value={formData.assignedTo}
+                    onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                    placeholder="Search name or enter email..."
+                    disabled={isStaff}
+                  />
+                  {!isStaff && (
+                    <>
+                      <datalist id="employee-list">
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.email}>
+                            {emp.fullName} ({emp.department})
+                          </option>
+                        ))}
+                      </datalist>
+                      {formData.assignedTo.includes('@') && !employees.find(e => e.email === formData.assignedTo) && (
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              const emailPrefix = formData.assignedTo.split('@')[0];
+                              const newEmp = {
+                                employeeId: `EMP-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+                                fullName: emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1).replace(/[._]/g, ' '),
+                                email: formData.assignedTo,
+                                department: 'Auto-Registered',
+                                position: 'Asset Holder',
+                                status: 'Active',
+                                joinDate: new Date().toISOString().split('T')[0],
+                                createdAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString(),
+                              };
+                              await supabaseService.addDocument('employees', newEmp);
+                              toast.success("Employee registered successfully");
+                            } catch (error: any) {
+                              console.error("Auto-registration error:", error);
+                              toast.error(error.message || "Registration failed");
+                            }
+                          }}
+                        >
+                          Register
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+                {!isStaff && <p className="text-[10px] text-muted-foreground">Select an employee by email or enter a new email to register. Registered employees can sign up with this email to access the system.</p>}
+                {isStaff && <p className="text-[10px] text-muted-foreground text-blue-600 font-medium">Assets you add will be automatically assigned to you ({userEmail}).</p>}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="roles" className="text-right">Roles</Label>

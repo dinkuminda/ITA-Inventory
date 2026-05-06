@@ -6,7 +6,7 @@
 import * as React from "react";
 import { useState, useEffect } from 'react';
 import { PlusCircle } from "lucide-react";
-import { Asset, AssetStatus, ApprovalStatus, UserRole } from '@/src/types';
+import { Asset, AssetStatus, ApprovalStatus, UserRole, Employee } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { supabaseService } from '@/src/lib/supabaseService';
@@ -24,17 +24,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Papa from 'papaparse';
 import { format } from 'date-fns';
-
-interface Employee {
-  id: string;
-  employeeId: string;
-  fullName: string;
-  email: string;
-  department: string;
-  position: string;
-  status: string;
-  joinDate: string;
-}
 
 export function StaffList({ userRole }: { userRole?: UserRole }) {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -64,15 +53,33 @@ export function StaffList({ userRole }: { userRole?: UserRole }) {
 
   const handleSave = async () => {
     try {
+      // Basic validation
+      const cleanEmail = formData.email.trim().toLowerCase();
+      if (!cleanEmail || !cleanEmail.includes('@')) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+
       if (editingEmployee) {
         await supabaseService.updateDocument('employees', editingEmployee.id, {
           ...formData,
+          email: cleanEmail,
           updatedAt: new Date().toISOString(),
         });
         toast.success("Employee updated successfully");
       } else {
+        // Check for duplicate email before adding
+        const existing = employees.find(emp => emp.email.toLowerCase() === cleanEmail);
+        if (existing) {
+          toast.error(`Employee with email ${cleanEmail} already exists in the system.`);
+          return;
+        }
+
+        const finalEmployeeId = formData.employeeId.trim() || `EMP-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
         await supabaseService.addDocument('employees', {
           ...formData,
+          email: cleanEmail,
+          employeeId: finalEmployeeId,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
@@ -80,8 +87,13 @@ export function StaffList({ userRole }: { userRole?: UserRole }) {
       }
       setIsDialogOpen(false);
       resetForm();
-    } catch (error) {
-      toast.error("Failed to save employee");
+    } catch (error: any) {
+      console.error("Save employee error:", error);
+      if (error.message?.includes('employees_email_key')) {
+        toast.error("This email is already registered to another employee.");
+      } else {
+        toast.error(error.message || "Failed to save employee");
+      }
     }
   };
 
@@ -143,11 +155,21 @@ export function StaffList({ userRole }: { userRole?: UserRole }) {
           }));
 
           if (formatted.length > 0) {
-            await supabaseService.addDocuments('employees', formatted);
-            toast.success(`Successfully imported ${formatted.length} employees`);
+            // Filter out existing emails from the import list
+            const existingEmails = new Set(employees.map(e => e.email.toLowerCase()));
+            const toImport = formatted.filter(item => !existingEmails.has(item.email.toLowerCase()));
+            const duplicates = formatted.length - toImport.length;
+
+            if (toImport.length > 0) {
+              await supabaseService.addDocuments('employees', toImport);
+              toast.success(`Successfully imported ${toImport.length} employees.${duplicates > 0 ? ` Skipped ${duplicates} duplicates.` : ''}`);
+            } else if (duplicates > 0) {
+              toast.info(`All ${duplicates} employees already exist in the system.`);
+            }
           }
-        } catch (error) {
-          toast.error("Import failed");
+        } catch (error: any) {
+          console.error("Import failed:", error);
+          toast.error(error.message || "Import failed");
         }
       }
     });
@@ -160,6 +182,15 @@ export function StaffList({ userRole }: { userRole?: UserRole }) {
     { header: 'Department', accessorKey: 'department' as keyof Employee },
     { header: 'Position', accessorKey: 'position' as keyof Employee },
     {
+      header: 'Account',
+      accessorKey: 'profileId' as keyof Employee,
+      cell: (item: Employee) => (
+        <Badge variant={item.profileId ? 'outline' : 'secondary'} className={item.profileId ? "bg-blue-50 text-blue-700 border-blue-200" : ""}>
+          {item.profileId ? 'Signed Up' : 'Pending'}
+        </Badge>
+      )
+    },
+    {
       header: 'Status',
       accessorKey: 'status' as keyof Employee,
       cell: (item: Employee) => (
@@ -170,14 +201,72 @@ export function StaffList({ userRole }: { userRole?: UserRole }) {
     },
   ];
 
+  const [quickEmail, setQuickEmail] = useState('');
+
+  const handleQuickRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = quickEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+
+    try {
+      // Check for duplicate email before adding
+      const existing = employees.find(emp => emp.email.toLowerCase() === cleanEmail);
+      if (existing) {
+        toast.error(`Employee with email ${cleanEmail} already exists.`);
+        return;
+      }
+
+      const emailPrefix = cleanEmail.split('@')[0];
+      const newEmployee = {
+        employeeId: `EMP-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        fullName: emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1).replace(/[._]/g, ' '),
+        email: cleanEmail,
+        department: 'TBD',
+        position: 'Registered by Email',
+        status: 'Active',
+        joinDate: new Date().toISOString().split('T')[0],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await supabaseService.addDocument('employees', newEmployee);
+      setQuickEmail('');
+      toast.success(`Successfully registered ${quickEmail}`);
+    } catch (error: any) {
+      console.error("Quick registration error:", error);
+      if (error.message?.includes('employees_email_key')) {
+        toast.error("This email is already registered to another employee.");
+      } else {
+        toast.error(error.message || "Registration failed. Email might already exist.");
+      }
+    }
+  };
+
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Staff Management</h2>
-        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 transition-all">
-          <PlusCircle className="h-5 w-5" />
-          Add Employee
-        </Button>
+        <div className="flex items-center gap-4">
+          <form onSubmit={handleQuickRegister} className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Enter email to authorize employee..."
+                value={quickEmail}
+                onChange={(e) => setQuickEmail(e.target.value)}
+                className="w-[280px]"
+              />
+              <Button type="submit" variant="secondary">Authorize</Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground px-1">Employees must sign up with this email to view/add/import/export assets.</p>
+          </form>
+          <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 transition-all">
+            <PlusCircle className="h-5 w-5" />
+            Add Employee
+          </Button>
+        </div>
       </div>
       {loading ? (
         <div className="animate-pulse space-y-4">
