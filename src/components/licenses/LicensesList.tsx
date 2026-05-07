@@ -184,10 +184,13 @@ export function LicensesList({ userRole, userEmail }: { userRole?: UserRole, use
   ];
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Licenses</h2>
-        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-200 transition-all">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black tracking-tight text-slate-900 italic">Licenses</h2>
+          <p className="text-sm font-medium text-slate-500">Manage software subscriptions and seat allocations.</p>
+        </div>
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-12 px-6 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white shadow-xl shadow-purple-500/20 transition-all font-bold gap-2">
           <PlusCircle className="h-5 w-5" />
           Add License
         </Button>

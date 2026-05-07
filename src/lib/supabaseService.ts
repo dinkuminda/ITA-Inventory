@@ -93,6 +93,23 @@ export const supabaseService = {
       console.error(`Supabase Error (delete ${table}):`, error);
       throw error;
     }
+  },
+
+  async queryDocuments<T>(table: string, filters: { field: string; operator: 'eq' | 'neq' | 'ilike'; value: any }[]): Promise<{ data: T[]; error: any }> {
+    let query: any = supabase.from(table).select('*');
+    
+    for (const filter of filters) {
+      const snakeField = filter.field.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      if (filter.operator === 'eq') query = query.eq(snakeField, filter.value);
+      if (filter.operator === 'neq') query = query.neq(snakeField, filter.value);
+      if (filter.operator === 'ilike') query = query.ilike(snakeField, filter.value);
+    }
+
+    const { data, error } = await query;
+    return { 
+      data: (data || []).map(d => convertToCamelCase(d)) as T[], 
+      error 
+    };
   }
 };
 

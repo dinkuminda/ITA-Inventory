@@ -239,10 +239,13 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
   ];
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Assets</h2>
-        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 transition-all">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black tracking-tight text-slate-900 italic">Assets</h2>
+          <p className="text-sm font-medium text-slate-500">Manage and track physical equipment across all locations.</p>
+        </div>
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-12 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20 transition-all font-bold gap-2">
           <PlusCircle className="h-5 w-5" />
           Add Asset
         </Button>

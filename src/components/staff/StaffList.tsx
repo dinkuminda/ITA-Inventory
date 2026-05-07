@@ -24,6 +24,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Papa from 'papaparse';
 import { format } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UsersList } from "./UsersList";
 
 export function StaffList({ userRole }: { userRole?: UserRole }) {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -98,12 +100,33 @@ export function StaffList({ userRole }: { userRole?: UserRole }) {
   };
 
   const handleDelete = async (employee: Employee) => {
-    if (confirm(`Are you sure you want to delete ${employee.fullName}?`)) {
+    if (!isAdmin) {
+      toast.error("Unauthorized: Only admins can delete employees.");
+      return;
+    }
+
+    if (employee.email.toLowerCase() === 'dinkuh12@gmail.com') {
+      toast.error("Cannot delete the root administrator account.");
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete ${employee.fullName}? This will also remove their system access.`)) {
       try {
+        setLoading(true);
+        // 1. Delete associated profile if it exists
+        if (employee.profileId) {
+          await supabaseService.deleteDocument('profiles', employee.profileId);
+        }
+        
+        // 2. Delete employee record
         await supabaseService.deleteDocument('employees', employee.id);
-        toast.success("Employee removed");
-      } catch (error) {
-        toast.error("Failed to delete employee");
+        
+        toast.success(`Employee ${employee.fullName} removed successfully`);
+      } catch (error: any) {
+        console.error("Delete employee error:", error);
+        toast.error(error.message || "Failed to delete employee");
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -246,58 +269,77 @@ export function StaffList({ userRole }: { userRole?: UserRole }) {
   };
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Staff Management</h2>
-        <div className="flex items-center gap-4">
-          <form onSubmit={handleQuickRegister} className="flex flex-col gap-1">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-black tracking-tight text-slate-900 italic uppercase">Staff Control</h2>
+          <p className="text-sm font-medium text-slate-500">Coordinate access and authorized equipment holders.</p>
+        </div>
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <form onSubmit={handleQuickRegister} className="flex flex-col gap-1 w-full md:w-auto">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="Enter email to authorize employee..."
+                placeholder="Authorize employee email..."
                 value={quickEmail}
                 onChange={(e) => setQuickEmail(e.target.value)}
-                className="w-[280px]"
+                className="w-full md:w-[280px] h-12 rounded-xl bg-white border-slate-200 shadow-sm focus:ring-emerald-500"
               />
-              <Button type="submit" variant="secondary">Authorize</Button>
+              <Button type="submit" variant="secondary" className="h-12 px-6 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-900">Authorize</Button>
             </div>
-            <p className="text-[10px] text-muted-foreground px-1">Employees must sign up with this email to view/add/import/export assets.</p>
+            <p className="text-[10px] text-slate-400 px-1 font-bold uppercase tracking-wider">Manual authorization portal</p>
           </form>
-          <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 transition-all">
+          <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 transition-all font-bold gap-2 w-full md:w-auto">
             <PlusCircle className="h-5 w-5" />
-            Add Employee
+            Add Staff
           </Button>
         </div>
       </div>
-      {loading ? (
-        <div className="animate-pulse space-y-4">
-          <div className="h-64 bg-muted rounded"></div>
+      <Tabs defaultValue="employees" className="w-full">
+        <div className="flex items-center justify-between mb-6">
+          <TabsList className="bg-slate-100 p-1 border border-slate-200">
+            <TabsTrigger value="employees" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">Employee Directory</TabsTrigger>
+            <TabsTrigger value="users" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">System Users (Accounts)</TabsTrigger>
+          </TabsList>
         </div>
-       ) : (
-        <DataTable
-          title="Employee"
-          data={employees}
-          columns={columns}
-          onAdd={undefined}
-          onExport={handleExport}
-          onImport={isAdmin ? handleImport : undefined}
-          onEdit={isAdmin ? (employee) => {
-            setEditingEmployee(employee);
-            setFormData({
-              employeeId: employee.employeeId,
-              fullName: employee.fullName,
-              email: employee.email,
-              department: employee.department || '',
-              position: employee.position || '',
-              status: employee.status,
-              joinDate: employee.joinDate,
-            });
-            setIsDialogOpen(true);
-          } : undefined}
-          onDelete={isAdmin ? handleDelete : undefined}
-          useDirectActions={true}
-          searchPlaceholder="Search staff..."
-        />
-      )}
+        
+        <TabsContent value="employees" className="mt-0">
+          <div className="space-y-4">
+            {loading ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-64 bg-muted rounded-xl"></div>
+              </div>
+             ) : (
+              <DataTable
+                title="Employee"
+                data={employees}
+                columns={columns}
+                onAdd={undefined}
+                onExport={handleExport}
+                onImport={isAdmin ? handleImport : undefined}
+                onEdit={isAdmin ? (employee) => {
+                  setEditingEmployee(employee);
+                  setFormData({
+                    employeeId: employee.employeeId,
+                    fullName: employee.fullName,
+                    email: employee.email,
+                    department: employee.department || '',
+                    position: employee.position || '',
+                    status: employee.status,
+                    joinDate: employee.joinDate,
+                  });
+                  setIsDialogOpen(true);
+                } : undefined}
+                onDelete={isAdmin ? handleDelete : undefined}
+                useDirectActions={true}
+                searchPlaceholder="Search staff..."
+              />
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="users" className="mt-0">
+          <UsersList />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">

@@ -20,37 +20,22 @@ export const authService = {
       email,
       password,
     });
-    if (error) throw error;
+    
+    if (error) {
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        throw new Error("Login failed: Your email address has not been verified yet. Please check your inbox for the confirmation link and click it to activate your account.");
+      }
+      if (error.message.toLowerCase().includes('invalid login credentials')) {
+        throw new Error("Login failed: Incorrect email or password. Please try again.");
+      }
+      throw error;
+    }
+    
     return data.user;
   },
 
   async signup(email: string, password: string, displayName: string) {
-    // 1. Pre-check if email is authorized (employee table or super admin)
-    const isAdminEmail = email.toLowerCase() === 'dinkuh12@gmail.com';
-    
-    if (!isAdminEmail) {
-      const cleanEmail = email.trim().toLowerCase();
-      console.log('Checking authorization for clean email:', cleanEmail);
-      const { data: employee, error: empError } = await supabase
-        .from('employees')
-        .select('email, full_name')
-        .ilike('email', cleanEmail)
-        .maybeSingle();
-
-      if (empError) {
-        console.error('Email authorization check error:', empError);
-        throw new Error("Validation service error. Please try again in a moment.");
-      }
-
-      if (!employee) {
-        console.warn('Authorization failed: No employee record found for', cleanEmail);
-        throw new Error(`Registration denied: ${cleanEmail} is not in our authorized employee list. Please ask an admin to add you to the Employee Directory.`);
-      }
-      
-      console.log('Authorization successful for employee:', employee.full_name);
-    }
-
-    // 2. Proceed with signup
+    // Proceed with signup directly - anyone can sign up but they must verify email
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -124,7 +109,27 @@ export const authService = {
       }
 
       const displayName = user.user_metadata?.display_name || employee?.fullName || user.email?.split('@')[0] || 'Unknown User';
-      const role = user.email.toLowerCase() === 'dinkuh12@gmail.com' ? UserRole.ADMIN : (employee?.role || UserRole.STAFF);
+      const isSuperAdmin = user.email.toLowerCase() === 'dinkuh12@gmail.com';
+      const role = isSuperAdmin ? UserRole.ADMIN : (employee?.role || UserRole.STAFF);
+
+      // AUTO-AUTHORIZE SUPER ADMIN: If super admin logs in and isn't in employees, add them
+      if (isSuperAdmin && !employee) {
+        console.log('Auto-authorizing root administrator...');
+        try {
+          await supabase.from('employees').insert([{
+            employee_id: 'ADMIN-001',
+            full_name: 'System Administrator',
+            email: user.email.toLowerCase(),
+            department: 'IT Directorate',
+            position: 'Chief Administrator',
+            status: 'Active',
+            role: UserRole.ADMIN,
+            profile_id: user.id
+          }]);
+        } catch (e) {
+          console.error('Failed to auto-authorize admin in employees table:', e);
+        }
+      }
 
       console.log('Creating new profile for:', user.email, 'with role:', role);
 
