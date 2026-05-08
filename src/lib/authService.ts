@@ -131,6 +131,10 @@ export const authService = {
   async ensureProfile(user: any): Promise<UserProfile | null> {
     if (!user) return null;
 
+    const cleanEmail = user.email?.toLowerCase().trim() || "";
+    const isSuperAdmin = cleanEmail === 'dinkuh12@gmail.com';
+    const fallbackDisplayName = user.user_metadata?.display_name || cleanEmail.split('@')[0] || 'User';
+
     try {
       // 1. Fetch current profile
       const { data: profile, error: fetchError } = await supabase
@@ -140,11 +144,11 @@ export const authService = {
         .maybeSingle();
 
       if (fetchError) {
-          console.warn('[Auth] Error fetching profile, will attempt upsert:', fetchError);
+          console.warn('[Auth] Error fetching profile:', fetchError);
       }
 
       if (profile) {
-        console.log('[Auth] Profile already exists for user:', user.id);
+        console.log('[Auth] Profile found for user:', user.id);
         return {
           id: profile.id,
           email: profile.email,
@@ -153,10 +157,7 @@ export const authService = {
         };
       }
 
-      // 2. Not found, determine role and create
-      const cleanEmail = user.email.toLowerCase().trim();
-      const isSuperAdmin = cleanEmail === 'dinkuh12@gmail.com';
-
+      // 2. Not found, determine role and attempt creation
       // Check for employee record
       const { data: employeeData } = await supabase
         .from('employees')
@@ -165,9 +166,9 @@ export const authService = {
         .maybeSingle();
 
       const role = isSuperAdmin ? UserRole.ADMIN : (employeeData?.role || UserRole.STAFF);
-      const displayName = user.user_metadata?.display_name || employeeData?.full_name || cleanEmail.split('@')[0];
+      const displayName = user.user_metadata?.display_name || employeeData?.full_name || fallbackDisplayName;
 
-      // Upsert profile for robustness
+      // Upsert profile
       const { data: newProfile, error: upsertError } = await supabase
         .from('profiles')
         .upsert([{
@@ -180,18 +181,14 @@ export const authService = {
         .single();
 
       if (upsertError) {
-        console.error('Profile creation failed:', upsertError);
-        // Maybe it exists now? (Race condition)
-        const { data: retry } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-        if (retry) {
-            return {
-                id: retry.id,
-                email: retry.email,
-                displayName: retry.display_name,
-                role: retry.role as UserRole
-            };
-        }
-        return null;
+        console.warn('[Auth] Profile creation failed, providing ephemeral session profile:', upsertError);
+        // If upsert fails (likely RLS or connection), we still allow them in with a calculated role
+        return {
+          id: user.id,
+          email: cleanEmail,
+          displayName: displayName,
+          role: role as UserRole
+        };
       }
 
       // 3. Update employee record if matched
@@ -212,7 +209,7 @@ export const authService = {
                 profile_id: user.id
             }]);
         } catch (adminErr) {
-            console.error('Superadmin employee creation failed (likely already exists):', adminErr);
+            console.error('Superadmin employee creation failed:', adminErr);
         }
       }
 
@@ -224,7 +221,13 @@ export const authService = {
       };
     } catch (e) {
       console.error('ensureProfile panic:', e);
-      return null;
+      // Absolute fallback so user is never locked out of the frontend
+      return {
+        id: user.id,
+        email: cleanEmail,
+        displayName: fallbackDisplayName,
+        role: isSuperAdmin ? UserRole.ADMIN : UserRole.STAFF
+      };
     }
   },
 
