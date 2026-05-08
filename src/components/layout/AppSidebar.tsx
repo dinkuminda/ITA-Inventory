@@ -56,8 +56,8 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
             <Boxes size={24} />
           </div>
           <div className="flex flex-col">
-            <span className="font-extrabold text-xl tracking-tight text-slate-900">ITA Inventory</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Directorate</span>
+            <span className="font-extrabold text-xl tracking-tight text-slate-900">ITA Directorate</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inventory System</span>
           </div>
         </div>
       </SidebarHeader>

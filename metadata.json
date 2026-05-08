@@ -1,6 +1,6 @@
 {
-  "name": "ITA Inventory Management System",
-  "description": "A professional IT inventory management system with asset tracking, license management, maintenance logs, and role-based access control.",
+  "name": "ITA Directorate Inventory System",
+  "description": "A comprehensive IT inventory management system for the ITA Directorate, featuring asset tracking, license management, and secure evidence structuring.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

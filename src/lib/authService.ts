@@ -7,6 +7,26 @@ import { supabase } from './supabase';
 import { UserRole, UserProfile } from '../types';
 import { convertToCamelCase, convertToSnakeCase } from './supabaseService';
 
+// NOTE TO DEVELOPER: To ensure profiles are created automatically upon signup 
+// (even before the user logs in for the first time), it is highly recommended 
+// to add a trigger in your Supabase SQL editor:
+/*
+create function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, display_name)
+  values (new.id, new.email, new.raw_user_meta_data->>'display_name');
+  return new;
+end;
+$$;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+*/
+
 export const authService = {
   subscribeAuth(callback: (user: any | null) => void) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -35,47 +55,70 @@ export const authService = {
   },
 
   async signup(email: string, password: string, displayName: string) {
-    // Proceed with signup directly - anyone can sign up but they must verify email
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name: displayName,
+    try {
+      console.log('[Supabase Auth] signup() initiates. target:', email);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName,
+            full_name: displayName, // Compatibility with some triggers
+          },
+          emailRedirectTo: window.location.origin
+        },
+      });
+      
+      if (error) {
+        console.error('[Supabase Auth] API Error during signup:', error);
+        
+        // Handle specific error cases
+        const msg = error.message.toLowerCase();
+        if (msg.includes('user already registered') || error.status === 422) {
+          throw new Error("This email is already registered. If you haven't received your verification email, check your spam or try logging in.");
         }
+        if (msg.includes('weak_password')) {
+          throw new Error("Password is too weak. Please use at least 6 characters.");
+        }
+        if (msg.includes('database error') || msg.includes('server error')) {
+          throw new Error("The authentication server had a temporary issue. Please try again soon.");
+        }
+        
+        throw error;
       }
-    });
-    
-    if (error) {
-      console.error('Signup error:', error);
-      if (error.message.includes('Database error')) {
-        throw new Error("Account creation failed on the server. If you recently deleted your account, it might take a few minutes to clear. Otherwise, contact an admin.");
+
+      console.log('[Supabase Auth] API Success. Response detail:', {
+        userId: data.user?.id,
+        identities: data.user?.identities?.length,
+        isConfirmed: !!data.user?.confirmed_at,
+        hasSession: !!data.session
+      });
+
+      if (!data.user) {
+        throw new Error("Technical error: Auth response contained no user data.");
       }
-      throw error;
+
+      let isExistingUnconfirmed = false;
+      // If identities is empty, it means the user already exists (Supabase security feature)
+      if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+        console.warn('[Supabase Auth] Note: Identities list is empty. User exists but needs verification.');
+        isExistingUnconfirmed = true;
+      }
+
+      return {
+        ...data,
+        isExistingUnconfirmed
+      };
+    } catch (err: any) {
+      console.error('[Supabase Auth] Signup failed at service level:', err.message);
+      throw err;
     }
-    
-    return data.user;
   },
 
   async logout() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-  },
-
-  async signInWithOAuth(provider: 'google' | 'facebook') {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: window.location.origin,
-      }
-    });
-    
-    if (error) {
-      console.error(`${provider} login error:`, error);
-      throw error;
-    }
-    
-    return data;
   },
 
   async sendPasswordResetEmail(email: string) {
@@ -89,9 +132,7 @@ export const authService = {
     if (!user) return null;
 
     try {
-      console.log('Ensuring profile for user:', user.email, 'ID:', user.id);
-      
-      // 1. Check if profile exists
+      // 1. Fetch current profile
       const { data: profile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -99,108 +140,90 @@ export const authService = {
         .maybeSingle();
 
       if (fetchError) {
-        console.error('Error fetching existing profile:', fetchError);
+          console.warn('[Auth] Error fetching profile, will attempt upsert:', fetchError);
       }
 
       if (profile) {
-        console.log('Found existing profile for:', user.email);
-        const p = convertToCamelCase(profile);
+        console.log('[Auth] Profile already exists for user:', user.id);
         return {
-          id: p.id,
-          email: p.email,
-          displayName: p.displayName,
-          role: p.role as UserRole
+          id: profile.id,
+          email: profile.email,
+          displayName: profile.display_name,
+          role: profile.role as UserRole
         };
       }
 
-      console.log('No profile found, checking employee registration...');
-      const cleanEmail = user.email.trim().toLowerCase();
+      // 2. Not found, determine role and create
+      const cleanEmail = user.email.toLowerCase().trim();
+      const isSuperAdmin = cleanEmail === 'dinkuh12@gmail.com';
 
-      // 2. Create profile if missing
-      // 2.1 Check if they are in employees table to get initial data
-      const { data: employeeData, error: empQueryError } = await supabase
+      // Check for employee record
+      const { data: employeeData } = await supabase
         .from('employees')
         .select('*')
         .ilike('email', cleanEmail)
         .maybeSingle();
 
-      const employee = employeeData ? convertToCamelCase(employeeData) : null;
-      if (employee) {
-        console.log('Matched with employee record:', employee.fullName);
-      } else {
-        console.warn('No matching employee record found for:', user.email);
-      }
+      const role = isSuperAdmin ? UserRole.ADMIN : (employeeData?.role || UserRole.STAFF);
+      const displayName = user.user_metadata?.display_name || employeeData?.full_name || cleanEmail.split('@')[0];
 
-      const displayName = user.user_metadata?.display_name || employee?.fullName || user.email?.split('@')[0] || 'Unknown User';
-      const isSuperAdmin = user.email.toLowerCase() === 'dinkuh12@gmail.com';
-      const role = isSuperAdmin ? UserRole.ADMIN : (employee?.role || UserRole.STAFF);
-
-      // AUTO-AUTHORIZE SUPER ADMIN: If super admin logs in and isn't in employees, add them
-      if (isSuperAdmin && !employee) {
-        console.log('Auto-authorizing root administrator...');
-        try {
-          await supabase.from('employees').insert([{
-            employee_id: 'ADMIN-001',
-            full_name: 'System Administrator',
-            email: user.email.toLowerCase(),
-            department: 'IT Directorate',
-            position: 'Chief Administrator',
-            status: 'Active',
-            role: UserRole.ADMIN,
-            profile_id: user.id
-          }]);
-        } catch (e) {
-          console.error('Failed to auto-authorize admin in employees table:', e);
-        }
-      }
-
-      console.log('Creating new profile for:', user.email, 'with role:', role);
-
-      const profileData = convertToSnakeCase({
-        id: user.id,
-        email: user.email,
-        displayName: displayName,
-        role: role
-      });
-
-      const { data: newProfile, error: insertError } = await supabase
+      // Upsert profile for robustness
+      const { data: newProfile, error: upsertError } = await supabase
         .from('profiles')
-        .insert([profileData])
+        .upsert([{
+          id: user.id,
+          email: cleanEmail,
+          display_name: displayName,
+          role: role
+        }])
         .select()
         .single();
 
-      if (insertError) {
-        console.error('Lazy profile creation error:', insertError);
-        // If profile creation fails, we might still want to return a basic profile if we're in admin mode
-        // but generally we shouldn't continue without a DB record
+      if (upsertError) {
+        console.error('Profile creation failed:', upsertError);
+        // Maybe it exists now? (Race condition)
+        const { data: retry } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        if (retry) {
+            return {
+                id: retry.id,
+                email: retry.email,
+                displayName: retry.display_name,
+                role: retry.role as UserRole
+            };
+        }
         return null;
       }
 
-      console.log('New profile created successfully');
+      // 3. Update employee record if matched
+      if (employeeData && !employeeData.profile_id) {
+        await supabase.from('employees').update({ profile_id: user.id }).eq('id', employeeData.id);
+      }
 
-      // 3. Link employee to profile if they match
-      if (employee && !employee.profileId) {
+      // 4. Auto-authorize Super Admin if no employee record exists
+      if (isSuperAdmin && !employeeData) {
         try {
-          console.log(`Linking employee ${employee.id} to new profile ${user.id}`);
-          await supabase
-            .from('employees')
-            .update({ profile_id: user.id })
-            .eq('id', employee.id);
-        } catch (linkErr) {
-          console.error('Failed to link employee to profile:', linkErr);
-          // Non-blocking error
+            await supabase.from('employees').insert([{
+                employee_id: 'SYSTEM-ROOT-001',
+                full_name: 'System Administrator',
+                email: cleanEmail,
+                department: 'IT Directorate',
+                position: 'Chief Administrator',
+                role: UserRole.ADMIN,
+                profile_id: user.id
+            }]);
+        } catch (adminErr) {
+            console.error('Superadmin employee creation failed (likely already exists):', adminErr);
         }
       }
 
-      const p = convertToCamelCase(newProfile);
       return {
-        id: p.id,
-        email: p.email,
-        displayName: p.displayName,
-        role: p.role as UserRole
+        id: newProfile.id,
+        email: newProfile.email,
+        displayName: newProfile.display_name,
+        role: newProfile.role as UserRole
       };
-    } catch (err) {
-      console.error('CRITICAL: Error in ensureProfile:', err);
+    } catch (e) {
+      console.error('ensureProfile panic:', e);
       return null;
     }
   },

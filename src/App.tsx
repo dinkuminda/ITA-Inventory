@@ -38,29 +38,49 @@ export default function App() {
   const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [lastRegisteredEmail, setLastRegisteredEmail] = useState('');
+  const [isResendMode, setIsResendMode] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const unsubscribe = authService.subscribeAuth(async (authUser) => {
+      if (!isMounted) return;
+      
       setUser(authUser);
       if (authUser) {
         setLoading(true);
-        const userProfile = await authService.ensureProfile(authUser);
-        setProfile(userProfile);
-        
-        // If they are on root or login, send them to dashboard
-        if (location.pathname === '/' || location.pathname === '/login') {
-          navigate('/dashboard');
+        try {
+          // Add a small delay for Supabase to finish database setup on first signup
+          const userProfile = await authService.ensureProfile(authUser);
+          
+          if (isMounted) {
+            setProfile(userProfile);
+            
+            // If they are on root or login, send them to dashboard
+            if (location.pathname === '/' || location.pathname === '/login') {
+              navigate('/dashboard');
+            }
+          }
+        } catch (err) {
+          console.error('Initial profile load failed:', err);
+          if (isMounted) toast.error("Account synchronization issues detected. Please log out and back in.");
         }
       } else {
-        setProfile(null);
+        if (isMounted) setProfile(null);
       }
-      setLoading(false);
+      if (isMounted) setLoading(false);
     });
-    return () => unsubscribe();
-  }, [navigate, location.pathname]);
+    
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[App] handleAuth triggered. isSignUp:', isSignUp, 'email:', email);
     
     if (isForgotPassword) {
       setLoading(true);
@@ -76,21 +96,43 @@ export default function App() {
       return;
     }
 
-    if (isSignUp && password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    setLoading(true);
     const cleanEmail = email.trim().toLowerCase();
+    console.log('[App] handleAuth form submission. Mode:', isSignUp ? 'SIGNUP' : 'LOGIN', 'Target:', cleanEmail);
+    setLoading(true);
     
     try {
+      console.log('[App] Auth operation start. Mode:', isSignUp ? 'SIGNUP' : 'LOGIN');
       if (isSignUp) {
-        await authService.signup(cleanEmail, password, displayName);
-        toast.success("Registration successful! Please check your email inbox for a confirmation link.", { duration: 10000 });
-        setIsSignUp(false);
+        if (!displayName.trim()) {
+          console.warn('[App] Validation failed: Name empty');
+          throw new Error("Full name is required for registration.");
+        }
+        if (password !== confirmPassword) {
+          console.warn('[App] Validation failed: Password mismatch');
+          throw new Error("Passwords do not match.");
+        }
+        
+        console.log('[App] Calling authService.signup with:', { cleanEmail, displayName });
+        const result = await authService.signup(cleanEmail, password, displayName);
+        
+        console.log('[App] authService.signup returned successfully:', {
+          hasUser: !!result.user,
+          hasSession: !!result.session,
+          isExisting: result.isExistingUnconfirmed
+        });
+
+        // SUCCESS PATH
+        setLastRegisteredEmail(cleanEmail);
+        setIsResendMode(result.isExistingUnconfirmed || false);
+        setSignupSuccess(true);
+        console.log('[App] signupSuccess set to true. UI should transition.');
+        
+        // Clear inputs after capture
+        setEmail('');
         setPassword('');
         setConfirmPassword('');
+        setDisplayName('');
+        toast.success("Account request sent successfully!");
       } else {
         try {
           await authService.login(cleanEmail, password);
@@ -116,9 +158,14 @@ export default function App() {
         }
       }
     } catch (error: any) {
-      console.error('Auth handler error:', error);
-      if (error.message && !error.message.includes("Account not found")) {
-        toast.error(error.message || "Authentication failed");
+      console.error('[App] Auth Action Error:', error);
+      const errorMessage = error.message || "An unexpected authentication error occurred";
+      
+      if (!errorMessage.includes("Account not found") && !errorMessage.includes("not yet authorized")) {
+        toast.error(errorMessage, { 
+          description: "Please double-check your coordinates and try again.",
+          duration: 6000 
+        });
       }
     } finally {
       setLoading(false);
@@ -144,7 +191,7 @@ export default function App() {
              <Boxes className="absolute inset-0 m-auto h-6 w-6 text-blue-600" />
           </div>
           <div className="text-center space-y-1">
-            <p className="text-lg font-bold text-slate-800">ITA Inventory</p>
+            <p className="text-lg font-bold text-slate-800">ITA Directorate</p>
             <p className="text-sm text-slate-400 font-medium animate-pulse">Establishing secure session...</p>
           </div>
         </div>
@@ -159,14 +206,60 @@ export default function App() {
         <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4 font-sans text-[#475569]">
           <div className="w-full max-w-md space-y-10 bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-blue-500/5 border border-slate-100">
             <div className="text-center space-y-3">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">ITA Inventory</h1>
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">ITA Directorate</h1>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] opacity-60">
-                Directorate Inventory System
+                Inventory System
               </p>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-6">
-              {isForgotPassword ? (
+            {signupSuccess ? (
+              <div className="space-y-8 animate-in fade-in zoom-in duration-500">
+                <div className="mx-auto w-20 h-20 bg-amber-50 text-amber-600 rounded-[2rem] flex items-center justify-center shadow-lg shadow-amber-500/10">
+                  <ShieldAlert size={40} strokeWidth={2.5} />
+                </div>
+                <div className="text-center space-y-4">
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                    {isResendMode ? "Verify your account" : "Activation Required"}
+                  </h2>
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                    {isResendMode 
+                      ? <>Registration for <span className="text-blue-600 font-bold">{lastRegisteredEmail}</span> was previously initiated but not verified.</>
+                      : <>Account created for <span className="text-blue-600 font-bold">{lastRegisteredEmail}</span> on ITA Inventory System.</>
+                    }
+                  </p>
+                  <div className="p-5 bg-blue-50/50 rounded-2xl text-left border border-blue-100 space-y-3">
+                    <p className="text-xs text-blue-700 font-bold uppercase tracking-wider">
+                       Activation Steps:
+                    </p>
+                    <ul className="text-xs text-blue-600/90 space-y-3 list-disc pl-4 font-medium leading-relaxed">
+                      <li>Check your inbox for a verification email from Supabase.</li>
+                      <li>Click the <span className="font-bold underline">Confirm Email</span> link inside.</li>
+                      <li>Check <span className="font-bold text-slate-800">Spam/Junk</span> if it doesn't appear in 2 minutes.</li>
+                      <li className="text-slate-600 italic">Note: You cannot log in until your email is verified.</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-16 rounded-2xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 text-lg shadow-sm"
+                    onClick={() => {
+                      setSignupSuccess(false);
+                      setIsSignUp(false);
+                      setIsResendMode(false);
+                      setEmail('');
+                      setPassword('');
+                      setConfirmPassword('');
+                      setDisplayName('');
+                    }}
+                  >
+                    Return to Login
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleAuth} className="space-y-6">
+                {isForgotPassword ? (
                 <div className="space-y-6">
                   <div className="text-center">
                     <h2 className="text-xl font-bold text-slate-800">Reset Password</h2>
@@ -292,8 +385,9 @@ export default function App() {
                 </>
               )}
             </form>
+            )}
             
-            {!isForgotPassword && (
+            {!isForgotPassword && !signupSuccess && (
               <>
                 <div className="text-center pt-2">
                   <button 
@@ -308,43 +402,17 @@ export default function App() {
                     {isSignUp ? "Already have an account? Log In" : "Don't have an account? Sign Up"}
                   </button>
                 </div>
-
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-slate-100" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase px-4">
-                    <span className="bg-white px-2 text-slate-400 font-bold italic tracking-widest">Or</span>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-14 rounded-2xl border-slate-100 bg-[#F8FAFC] hover:bg-slate-50 gap-3 text-slate-600 font-bold transition-all"
-                    onClick={() => authService.signInWithOAuth('facebook').catch(err => toast.error(err.message))}
-                    disabled={loading}
-                  >
-                    <svg className="w-6 h-6 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                    Continue with Facebook
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-14 rounded-2xl border-slate-100 bg-[#F8FAFC] hover:bg-slate-50 gap-3 text-slate-600 font-bold transition-all"
-                    onClick={() => authService.signInWithOAuth('google').catch(err => toast.error(err.message))}
-                    disabled={loading}
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.273 0 3.191 2.727 1.173 6.691l4.093 3.074z"/><path fill="#34A853" d="M12 24c3.155 0 5.8-1.045 7.736-2.836l-3.927-3.045c-1.045.7-2.382 1.127-3.809 1.127-2.927 0-5.418-1.973-6.3-4.627L1.645 17.69C3.655 21.327 7.536 24 12 24z"/><path fill="#4285F4" d="M23.491 12.273c0-.782-.064-1.545-.191-2.273H12v4.545h6.455c-.282 1.482-1.118 2.736-2.373 3.582l3.927 3.045c2.291-2.118 3.482-5.145 3.482-8.9z"/><path fill="#FBBC05" d="M5.7 14.655a6.83 6.83 0 0 1-.364-2.182c0-.764.127-1.5.364-2.182L1.609 7.218C.582 9.273 0 11.582 0 14c0 2.418.582 4.727 1.609 6.782l4.091-3.127z"/></svg>
-                    Continue with Google
-                  </Button>
-                </div>
               </>
             )}
 
-            <div className="text-center pt-6 border-t border-slate-50">
+            <div className="text-center pt-6 border-t border-slate-50 flex flex-col items-center gap-3">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">
                 Authorized Personnel Only
               </p>
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-full border border-slate-100">
+                <div className={`h-1.5 w-1.5 rounded-full ${supabase.auth ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Supabase Connected</span>
+              </div>
             </div>
           </div>
         </div>
@@ -406,7 +474,7 @@ export default function App() {
           <div className="p-8 max-w-7xl mx-auto w-full">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard userRole={profile?.role} userEmail={profile?.email || user?.email} />} />
+              <Route path="/dashboard" element={<Dashboard userRole={profile?.role} userEmail={profile?.email || user?.email} systemName="ITA Directorate Inventory" />} />
               <Route path="/assets" element={<AssetsList userRole={profile?.role} userEmail={profile?.email || user?.email} />} />
               <Route path="/licenses" element={<LicensesList userRole={profile?.role} userEmail={profile?.email || user?.email} />} />
               <Route path="/maintenance" element={<MaintenanceList userRole={profile?.role} userEmail={profile?.email || user?.email} />} />
@@ -425,7 +493,7 @@ export default function App() {
                     </div>
                     <div className="space-y-2">
                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">System Settings</h2>
-                       <p className="text-slate-500 max-w-sm mx-auto font-medium">Configure notification thresholds, asset categories, and global user policies.</p>
+                       <p className="text-slate-500 max-w-sm mx-auto font-medium">ICS Evidence configurations, log thresholds, and global security policies.</p>
                     </div>
                   </div>
                 ) : (

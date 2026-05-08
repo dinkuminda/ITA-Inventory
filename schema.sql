@@ -74,6 +74,7 @@ CREATE TABLE public.employees (
   department TEXT,
   position TEXT,
   join_date DATE DEFAULT CURRENT_DATE,
+  role TEXT DEFAULT 'Staff',
   status TEXT DEFAULT 'Active',
   profile_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
