@@ -32,7 +32,8 @@ export function LicensesList({ userRole, userEmail }: { userRole?: UserRole, use
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLicense, setEditingLicense] = useState<License | null>(null);
 
-  const isAdmin = userRole === UserRole.ADMIN;
+  const isAdminEmail = userEmail?.toLowerCase().trim() === 'dinkuh12@gmail.com';
+  const isAdmin = userRole === UserRole.ADMIN || isAdminEmail;
   const isStaff = userRole === UserRole.STAFF;
   const hasEditPermission = isAdmin || isStaff;
 

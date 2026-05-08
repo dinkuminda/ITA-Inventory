@@ -38,7 +38,8 @@ export function MaintenanceList({ userRole, userEmail }: { userRole?: UserRole, 
     return () => unsubscribe();
   }, []);
 
-  const isAdmin = userRole === UserRole.ADMIN;
+  const isAdminEmail = userEmail?.toLowerCase().trim() === 'dinkuh12@gmail.com';
+  const isAdmin = userRole === UserRole.ADMIN || isAdminEmail;
   const isStaff = userRole === UserRole.STAFF;
   const hasEditPermission = isAdmin || isStaff;
 

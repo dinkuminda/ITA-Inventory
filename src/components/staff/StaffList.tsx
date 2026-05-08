@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Upload } from "lucide-react";
 import { Asset, AssetStatus, ApprovalStatus, UserRole, Employee } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -27,13 +27,14 @@ import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UsersList } from "./UsersList";
 
-export function StaffList({ userRole }: { userRole?: UserRole }) {
+export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEmail?: string }) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
-  const isAdmin = userRole === UserRole.ADMIN;
+  const isAdminEmail = userEmail?.toLowerCase().trim() === 'dinkuh12@gmail.com';
+  const isAdmin = userRole === UserRole.ADMIN || isAdminEmail;
 
   const [formData, setFormData] = useState({
     employeeId: '',
@@ -288,10 +289,43 @@ export function StaffList({ userRole }: { userRole?: UserRole }) {
             </div>
             <p className="text-[10px] text-slate-400 px-1 font-bold uppercase tracking-wider">Manual authorization portal</p>
           </form>
-          <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 transition-all font-bold gap-2 w-full md:w-auto">
-            <PlusCircle className="h-5 w-5" />
-            Add Staff
-          </Button>
+          
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            {isAdmin && (
+              <>
+                <Input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  id="staff-bulk-import"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImport(file);
+                  }}
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleExport()}
+                  className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-slate-50 text-slate-600 transition-all font-bold gap-2 flex-1 md:flex-none"
+                >
+                  <Upload className="h-5 w-5" />
+                  Export
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => document.getElementById('staff-bulk-import')?.click()}
+                  className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-slate-50 text-slate-600 transition-all font-bold gap-2 flex-1 md:flex-none"
+                >
+                  <Upload className="h-5 w-5" />
+                  Import
+                </Button>
+              </>
+            )}
+            <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 transition-all font-bold gap-2 flex-1 md:flex-none">
+              <PlusCircle className="h-5 w-5" />
+              Add Staff
+            </Button>
+          </div>
         </div>
       </div>
       <Tabs defaultValue="employees" className="w-full">

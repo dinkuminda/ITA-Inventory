@@ -467,7 +467,7 @@ export default function App() {
               <Route path="/maintenance" element={<MaintenanceList userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} />} />
               <Route path="/staff" element={
                 effectiveProfile?.role === UserRole.ADMIN ? (
-                  <StaffList userRole={effectiveProfile?.role} />
+                  <StaffList userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} />
                 ) : (
                   <Navigate to="/dashboard" replace />
                 )
