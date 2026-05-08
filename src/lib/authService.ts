@@ -62,6 +62,29 @@ export const authService = {
     if (error) throw error;
   },
 
+  async signInWithOAuth(provider: 'google' | 'facebook') {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+      }
+    });
+    
+    if (error) {
+      console.error(`${provider} login error:`, error);
+      throw error;
+    }
+    
+    return data;
+  },
+
+  async sendPasswordResetEmail(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  },
+
   async ensureProfile(user: any): Promise<UserProfile | null> {
     if (!user) return null;
 
