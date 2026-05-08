@@ -9,7 +9,9 @@ import { convertToCamelCase, convertToSnakeCase } from './supabaseService';
 
 // NOTE TO DEVELOPER: To ensure profiles are created automatically upon signup 
 // (even before the user logs in for the first time), it is highly recommended 
-// to add a trigger in your Supabase SQL editor:
+// to add a trigger in your Supabase SQL editor. 
+// If you get "Database error creating new user", verify that the role column 
+// allows 'staff' or has a default value.
 /*
 create function public.handle_new_user()
 returns trigger
@@ -17,8 +19,13 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, display_name)
-  values (new.id, new.email, new.raw_user_meta_data->>'display_name');
+  insert into public.profiles (id, email, display_name, role)
+  values (
+    new.id, 
+    new.email, 
+    new.raw_user_meta_data->>'display_name', 
+    case when new.email = 'dinkuh12@gmail.com' then 'admin' else 'staff' end
+  );
   return new;
 end;
 $$;
@@ -43,7 +50,7 @@ export const authService = {
     
     if (error) {
       if (error.message.toLowerCase().includes('email not confirmed')) {
-        throw new Error("Login failed: Your email address has not been verified yet. Please check your inbox for the confirmation link and click it to activate your account.");
+        throw new Error("Activation Required: Your account is not verified. Please click the confirmation link in the email sent by Supabase. Don't forget to check your Spam folder!");
       }
       if (error.message.toLowerCase().includes('invalid login credentials')) {
         throw new Error("Login failed: Incorrect email or password. Please try again.");
@@ -64,14 +71,18 @@ export const authService = {
         options: {
           data: {
             display_name: displayName,
-            full_name: displayName, // Compatibility with some triggers
+            full_name: displayName,
           },
           emailRedirectTo: window.location.origin
         },
       });
       
       if (error) {
-        console.error('[Supabase Auth] API Error during signup:', error);
+        console.error('[Supabase Auth] Signup failed. Error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
         
         // Handle specific error cases
         const msg = error.message.toLowerCase();
@@ -82,7 +93,7 @@ export const authService = {
           throw new Error("Password is too weak. Please use at least 6 characters.");
         }
         if (msg.includes('database error') || msg.includes('server error')) {
-          throw new Error("The authentication server had a temporary issue. Please try again soon.");
+          throw new Error("Signup Failed: This usually happens if a database trigger (on_auth_user_created) failed to create your profile. Ensure your SQL trigger includes the 'role' field.");
         }
         
         throw error;

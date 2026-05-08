@@ -80,13 +80,16 @@ export default function App() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[App] handleAuth triggered. isSignUp:', isSignUp, 'email:', email);
     
     if (isForgotPassword) {
+      if (!email.trim()) {
+        toast.error("Please enter your email address");
+        return;
+      }
       setLoading(true);
       try {
         await authService.sendPasswordResetEmail(email.trim().toLowerCase());
-        toast.success("Password reset link sent! Please check your email.");
+        toast.success("Reset link sent! Please check your inbox.");
         setIsForgotPassword(false);
       } catch (error: any) {
         toast.error(error.message || "Failed to send reset email");
@@ -97,76 +100,64 @@ export default function App() {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    console.log('[App] handleAuth form submission. Mode:', isSignUp ? 'SIGNUP' : 'LOGIN', 'Target:', cleanEmail);
     setLoading(true);
     
     try {
-      console.log('[App] Auth operation start. Mode:', isSignUp ? 'SIGNUP' : 'LOGIN');
       if (isSignUp) {
+        console.log('[App] Beginning Signup process for:', cleanEmail);
+        
         if (!displayName.trim()) {
-          console.warn('[App] Validation failed: Name empty');
-          throw new Error("Full name is required for registration.");
+          throw new Error("Please enter your full name.");
+        }
+        if (password.length < 6) {
+          throw new Error("Password must be at least 6 characters long.");
         }
         if (password !== confirmPassword) {
-          console.warn('[App] Validation failed: Password mismatch');
-          throw new Error("Passwords do not match.");
+          throw new Error("Passwords do not match. Please verify them.");
         }
         
-        console.log('[App] Calling authService.signup with:', { cleanEmail, displayName });
         const result = await authService.signup(cleanEmail, password, displayName);
         
-        console.log('[App] authService.signup returned successfully:', {
-          hasUser: !!result.user,
-          hasSession: !!result.session,
-          isExisting: result.isExistingUnconfirmed
-        });
+        console.log('[App] Signup service call completed:', result);
 
-        // SUCCESS PATH
         setLastRegisteredEmail(cleanEmail);
         setIsResendMode(result.isExistingUnconfirmed || false);
         setSignupSuccess(true);
-        console.log('[App] signupSuccess set to true. UI should transition.');
         
-        // Clear inputs after capture
+        // Success feedback
+        toast.success(result.isExistingUnconfirmed ? "Resending activation info..." : "Account created successfully!");
+        
+        // Reset local state
         setEmail('');
         setPassword('');
         setConfirmPassword('');
         setDisplayName('');
-        toast.success("Account request sent successfully!");
       } else {
+        console.log('[App] Beginning Login process for:', cleanEmail);
         try {
           await authService.login(cleanEmail, password);
-          toast.success("Welcome back!");
+          toast.success("Signed in successfully");
         } catch (loginError: any) {
-          if (loginError.message.includes("Login failed:")) {
-            toast.error(loginError.message, { duration: 6000 });
-            throw loginError;
-          }
-
-          const { data: employee } = await supabase
-            .from('employees')
-            .select('id')
-            .ilike('email', cleanEmail)
-            .maybeSingle();
+          console.error('[App] Login Error:', loginError);
+          const msg = loginError.message || "";
           
-          if (employee) {
-            toast.error("Account not found. Please click the 'Don't have an account? Sign Up' link to activate your profile.", { duration: 5000 });
+          if (msg.includes("Activation Required")) {
+            toast.error("Verify your email", {
+              description: "Supabase requires email activation before you can log in.",
+              duration: 8000
+            });
+            // Helpfully toggle to a "resend" or "check email" view if we had one, 
+            // but for now just showing the error is better than silence.
+          } else if (msg.includes("Invalid login credentials")) {
+            toast.error("Login Failed", { description: "Invalid email or password combination." });
           } else {
-            toast.error("Invalid credentials or unauthorized email. Please contact an administrator.");
+            toast.error("Login Failed", { description: msg });
           }
-          throw loginError;
         }
       }
     } catch (error: any) {
-      console.error('[App] Auth Action Error:', error);
-      const errorMessage = error.message || "An unexpected authentication error occurred";
-      
-      if (!errorMessage.includes("Account not found") && !errorMessage.includes("not yet authorized")) {
-        toast.error(errorMessage, { 
-          description: "Please double-check your coordinates and try again.",
-          duration: 6000 
-        });
-      }
+      console.error('[App] Auth Operation Error:', error.message);
+      toast.error(error.message || "Authentication failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -233,9 +224,10 @@ export default function App() {
                     </p>
                     <ul className="text-xs text-blue-600/90 space-y-3 list-disc pl-4 font-medium leading-relaxed">
                       <li>Check your inbox for a verification email from Supabase.</li>
-                      <li>Click the <span className="font-bold underline">Confirm Email</span> link inside.</li>
-                      <li>Check <span className="font-bold text-slate-800">Spam/Junk</span> if it doesn't appear in 2 minutes.</li>
-                      <li className="text-slate-600 italic">Note: You cannot log in until your email is verified.</li>
+                      <li>Click the <span className="font-bold underline text-blue-700">Confirm Email</span> button in the email.</li>
+                      <li>Check your <span className="font-bold text-slate-800">Spam/Junk</span> folder if missing.</li>
+                      <li className="text-slate-600 italic">Once verified, return here to log in with your credentials.</li>
+                      <li className="text-amber-600 font-bold">Important: You cannot log in without verifying your email first.</li>
                     </ul>
                   </div>
                 </div>
@@ -379,7 +371,14 @@ export default function App() {
                       className="w-full h-16 rounded-[1.25rem] bg-[#0066FF] hover:bg-[#0052CC] text-white text-lg font-bold shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] border-none" 
                       disabled={loading}
                     >
-                      {isSignUp ? "Sign Up" : "Log In"}
+                      {loading ? (
+                        <div className="flex items-center gap-3">
+                          <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Processing...</span>
+                        </div>
+                      ) : (
+                        isSignUp ? "Sign Up" : "Log In"
+                      )}
                     </Button>
                   </div>
                 </>
@@ -409,14 +408,16 @@ export default function App() {
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">
                 Authorized Personnel Only
               </p>
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-full border border-slate-100">
-                <div className={`h-1.5 w-1.5 rounded-full ${supabase.auth ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Supabase Connected</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
+                <div className={`h-1.5 w-1.5 rounded-full ${!supabase.supabaseUrl.includes('placeholder') ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                  {(!supabase.supabaseUrl.includes('placeholder')) ? 'Supabase Active' : 'Supabase Not Configured'}
+                </span>
               </div>
             </div>
           </div>
         </div>
-        <Toaster />
+        <Toaster position="top-right" richColors closeButton />
       </>
     );
   }
