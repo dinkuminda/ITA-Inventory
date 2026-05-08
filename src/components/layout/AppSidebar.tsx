@@ -23,6 +23,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserRole } from '@/src/types';
@@ -42,6 +43,8 @@ interface AppSidebarProps {
 
 export function AppSidebar({ user, onLogout }: AppSidebarProps) {
   const navigate = useNavigate();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   const filteredNavItems = navItems.filter(item => {
     if (item.path === '/staff' && user?.role !== UserRole.ADMIN) return false;
@@ -49,16 +52,18 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
   });
 
   return (
-    <Sidebar className="border-r">
-      <SidebarHeader className="p-6 border-b bg-slate-50/50">
-        <div className="flex items-center gap-3 px-2">
-          <div className="bg-blue-600 text-white p-2 rounded-xl shadow-lg shadow-blue-500/20">
+    <Sidebar collapsible="icon" className="border-r">
+      <SidebarHeader className={`p-4 border-b bg-slate-50/50 transition-all ${isCollapsed ? 'items-center px-2' : 'p-6'}`}>
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-600 text-white p-2 rounded-xl shadow-lg shadow-blue-500/20 shrink-0">
             <Boxes size={24} />
           </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-xl tracking-tight text-slate-900">ITA Directorate</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inventory System</span>
-          </div>
+          {!isCollapsed && (
+            <div className="flex flex-col animate-in fade-in duration-300">
+              <span className="font-extrabold text-xl tracking-tight text-slate-900 truncate">ITA Directorate</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">Inventory System</span>
+            </div>
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent className="py-6 px-3">
@@ -77,7 +82,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                     }`}
                   >
                     <item.icon size={20} className={isActive ? 'text-blue-600' : ''} />
-                    <span className="text-sm">{item.label}</span>
+                    {!isCollapsed && <span className="text-sm ml-2">{item.label}</span>}
                   </SidebarMenuButton>
                 )}
               </NavLink>
@@ -85,26 +90,28 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-4 mt-auto border-t bg-slate-50/30">
+      <SidebarFooter className={`p-4 mt-auto border-t bg-slate-50/30 transition-all ${isCollapsed ? 'px-2' : ''}`}>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center gap-3 px-3 py-3 mb-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-              <Avatar className="h-10 w-10 border border-slate-200">
+            <div className={`flex items-center gap-3 py-3 mb-4 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all ${isCollapsed ? 'justify-center p-2' : 'px-3'}`}>
+              <Avatar className="h-10 w-10 border border-slate-200 shrink-0">
                 <AvatarFallback className="bg-blue-100 text-blue-700 font-bold">
                   {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col overflow-hidden">
-                <span className="text-sm font-bold text-slate-900 truncate">
-                  {user?.displayName || 'User'}
-                </span>
-                <span className="text-[10px] text-slate-500 truncate flex items-center gap-1 font-medium">
-                  {user?.email}
-                </span>
-                {user?.role === UserRole.ADMIN && (
-                   <span className="mt-1 w-fit text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md uppercase font-black">Admin Access</span>
-                )}
-              </div>
+              {!isCollapsed && (
+                <div className="flex flex-col overflow-hidden animate-in fade-in duration-300">
+                  <span className="text-sm font-bold text-slate-900 truncate">
+                    {user?.displayName || 'User'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 truncate flex items-center gap-1 font-medium">
+                    {user?.email}
+                  </span>
+                  {user?.role === UserRole.ADMIN && (
+                     <span className="mt-1 w-fit text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md uppercase font-black">Admin Access</span>
+                  )}
+                </div>
+              )}
             </div>
           </SidebarMenuItem>
           {user?.role === UserRole.ADMIN && (
@@ -113,6 +120,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                 {({ isActive }) => (
                   <SidebarMenuButton 
                     isActive={isActive}
+                    tooltip="Settings"
                     className={`h-11 px-4 rounded-xl transition-all ${
                       isActive 
                         ? 'bg-blue-50 text-blue-700 font-bold border-r-4 border-blue-600 shadow-sm' 
@@ -120,7 +128,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                     }`}
                   >
                     <Settings size={20} className={isActive ? 'text-blue-600' : ''} />
-                    <span className="text-sm">Settings</span>
+                    {!isCollapsed && <span className="text-sm ml-2">Settings</span>}
                   </SidebarMenuButton>
                 )}
               </NavLink>
@@ -129,10 +137,11 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
           <SidebarMenuItem className="mt-2">
             <SidebarMenuButton 
               onClick={onLogout} 
-              className="h-11 px-4 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all font-semibold"
+              tooltip="Logout Session"
+              className={`h-11 px-4 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all font-semibold ${isCollapsed ? 'justify-center' : ''}`}
             >
               <LogOut size={20} />
-              <span className="text-sm">Logout Session</span>
+              {!isCollapsed && <span className="text-sm ml-2">Logout Session</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

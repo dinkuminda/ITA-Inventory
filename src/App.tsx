@@ -431,7 +431,7 @@ export default function App() {
   } : null);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="flex min-h-screen w-full bg-[#fdfdfd] text-slate-600">
         <AppSidebar
           user={{ 
