@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { PlusCircle, Upload } from "lucide-react";
+import { PlusCircle, Upload, Printer } from "lucide-react";
 import { Asset, AssetStatus, ApprovalStatus, UserRole, Employee } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,7 @@ import { ASSET_TYPES, LOCATIONS } from '@/src/constants';
 import { toast } from "sonner";
 import { QRCodeSVG } from 'qrcode.react';
 import Papa from 'papaparse';
+import { useReactToPrint } from 'react-to-print';
 
 export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userEmail?: string }) {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -36,6 +37,13 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
   const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [qrAsset, setQRAsset] = useState<Asset | null>(null);
+
+  const qrRef = React.useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: qrRef,
+    documentTitle: `Asset_QR_${qrAsset?.serialNumber || 'Label'}`,
+  });
 
   const isAdminEmail = userEmail?.toLowerCase().trim() === 'dinkuh12@gmail.com';
   const isAdmin = userRole === UserRole.ADMIN || isAdminEmail;
@@ -343,27 +351,31 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
               Scan this code to see asset details.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center space-y-6 pt-6">
+          <div ref={qrRef} className="flex flex-col items-center justify-center space-y-6 pt-6 print:p-8 print:bg-white">
             {qrAsset && (
               <>
-                <div className="p-4 bg-white rounded-lg shadow-sm border">
+                <div className="p-4 bg-white rounded-lg shadow-sm border print:border-0 print:shadow-none">
                   <QRCodeSVG 
-                    value={`Name: ${qrAsset.name}\nSerial: ${qrAsset.serialNumber || 'N/A'}\nAssigned: ${qrAsset.assignedTo || 'Unassigned'}`}
+                    value={`Asset: ${qrAsset.name}\nS/N: ${qrAsset.serialNumber || 'N/A'}\nLoc: ${qrAsset.location || 'N/A'}`}
                     size={200}
                     level="H"
                     includeMargin={true}
                   />
                 </div>
                 <div className="text-center space-y-1">
-                  <h4 className="font-bold text-lg">{qrAsset.name}</h4>
-                  <p className="text-sm text-muted-foreground">S/N: {qrAsset.serialNumber || 'N/A'}</p>
-                  <p className="text-sm font-medium">Assigned to: {qrAsset.assignedTo || 'None'}</p>
+                  <h4 className="font-bold text-lg print:text-xl">{qrAsset.name}</h4>
+                  <p className="text-sm text-muted-foreground print:text-base print:text-black">S/N: {qrAsset.serialNumber || 'N/A'}</p>
+                  <p className="text-xs font-bold text-blue-600 uppercase tracking-wider print:text-blue-800">{qrAsset.location}</p>
+                  {qrAsset.assignedTo && <p className="text-xs text-slate-500 print:text-slate-700">Assigned: {qrAsset.assignedTo}</p>}
                 </div>
               </>
             )}
           </div>
-          <DialogFooter>
-            <Button onClick={() => window.print()} variant="outline">Print Code</Button>
+          <DialogFooter className="print:hidden">
+            <Button onClick={() => handlePrint()} variant="outline" className="gap-2">
+              <Printer className="h-4 w-4" />
+              Print Code
+            </Button>
             <Button onClick={() => setIsQRDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>

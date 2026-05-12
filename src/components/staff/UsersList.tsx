@@ -11,7 +11,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabaseService } from '@/src/lib/supabaseService';
 import { toast } from "sonner";
-import { Shield, Mail, User as UserIcon, UserPlus, CheckCircle2 } from 'lucide-react';
+import { Shield, Mail, User as UserIcon, UserPlus, CheckCircle2, Lock, UserCog, AlertTriangle } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function UsersList() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -121,6 +129,35 @@ export function UsersList() {
     }
   };
 
+  const handleRoleChange = async (profile: UserProfile, newRole: UserRole) => {
+    if (profile.email.toLowerCase() === 'dinkuh12@gmail.com') {
+      toast.error("The root administrator role cannot be changed.");
+      return;
+    }
+
+    try {
+      await supabaseService.updateDocument('profiles', profile.id, {
+        role: newRole,
+        updatedAt: new Date().toISOString()
+      });
+      
+      // Also update employee record if it exists
+      const { data: employeesFound } = await supabaseService.queryDocuments<Employee>('employees', [
+        { field: 'email', operator: 'ilike', value: profile.email.toLowerCase() }
+      ]);
+      
+      if (employeesFound && employeesFound.length > 0) {
+        await supabaseService.updateDocument('employees', employeesFound[0].id, {
+          role: newRole
+        });
+      }
+      
+      toast.success(`User role updated to ${newRole}`);
+    } catch (error: any) {
+      toast.error("Failed to update user role");
+    }
+  };
+
   const columns = [
     { 
       header: 'UID', 
@@ -155,10 +192,29 @@ export function UsersList() {
       header: 'Role',
       accessorKey: 'role' as keyof UserProfile,
       cell: (item: UserProfile) => (
-        <Badge variant={item.role === UserRole.ADMIN ? 'default' : 'secondary'} className={item.role === UserRole.ADMIN ? "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100" : ""}>
-          {item.role === UserRole.ADMIN && <Shield size={10} className="mr-1" />}
-          {item.role}
-        </Badge>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 p-0 px-2 gap-1 group">
+              <Badge variant={item.role === UserRole.ADMIN ? 'default' : 'secondary'} className={item.role === UserRole.ADMIN ? "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200" : "hover:bg-slate-200"}>
+                {item.role === UserRole.ADMIN && <Shield size={10} className="mr-1" />}
+                {item.role}
+                <UserCog size={10} className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Badge>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Change Role</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => handleRoleChange(item, UserRole.ADMIN)}>
+              <Shield size={14} className="mr-2 text-amber-600" />
+              Make Admin
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleRoleChange(item, UserRole.STAFF)}>
+              <Lock size={14} className="mr-2 text-slate-600" />
+              Make Staff
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )
     },
     {
@@ -193,13 +249,48 @@ export function UsersList() {
     }
   ];
 
+  const stats = {
+    total: profiles.length,
+    admins: profiles.filter(p => p.role === UserRole.ADMIN).length,
+    unauthorized: profiles.filter(p => !isUserAuthorized(p.email)).length
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">System Access</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-slate-900">{stats.total}</span>
+            <span className="text-xs text-slate-500 font-medium">Total Accounts</span>
+          </div>
+        </div>
+        <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 shadow-sm">
+          <p className="text-xs font-bold text-amber-600/70 uppercase tracking-widest mb-1">Administrative Control</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-amber-700">{stats.admins}</span>
+            <span className="text-xs text-amber-600 font-medium">Privileged Users</span>
+          </div>
+        </div>
+        <div className=" Cedarville bg-rose-50/50 p-4 rounded-xl border border-rose-100 shadow-sm">
+          <p className="text-xs font-bold text-rose-600/70 uppercase tracking-widest mb-1">Security Alerts</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-rose-700">{stats.unauthorized}</span>
+            <span className="text-xs text-rose-600 font-medium">Pending Authorization</span>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold">System Users</h3>
-          <p className="text-xs text-muted-foreground">Accounts that have completed the registration process.</p>
+          <h3 className="text-xl font-black italic uppercase text-slate-900 tracking-tight">System User Management</h3>
+          <p className="text-xs font-medium text-slate-500">Inventory of authenticated accounts and their operational permissions.</p>
         </div>
+        {stats.unauthorized > 0 && (
+          <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 gap-1 animate-pulse">
+            <AlertTriangle size={12} /> ACTION REQUIRED
+          </Badge>
+        )}
       </div>
       
       {loading ? (

@@ -409,9 +409,9 @@ export default function App() {
                 Authorized Personnel Only
               </p>
               <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
-                <div className={`h-1.5 w-1.5 rounded-full ${!supabase.supabaseUrl.includes('placeholder') ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                <div className={`h-1.5 w-1.5 rounded-full ${import.meta.env.VITE_SUPABASE_URL ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                 <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                  {(!supabase.supabaseUrl.includes('placeholder')) ? 'Supabase Active' : 'Supabase Not Configured'}
+                  {import.meta.env.VITE_SUPABASE_URL ? 'Supabase Active' : 'Supabase Not Configured'}
                 </span>
               </div>
             </div>
@@ -461,7 +461,7 @@ export default function App() {
           <div className="p-8 max-w-7xl mx-auto w-full">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} systemName="ITA Directorate Inventory" />} />
+              <Route path="/dashboard" element={<Dashboard userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} />} />
               <Route path="/assets" element={<AssetsList userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} />} />
               <Route path="/licenses" element={<LicensesList userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} />} />
               <Route path="/maintenance" element={<MaintenanceList userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} />} />

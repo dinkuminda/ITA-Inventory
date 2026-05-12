@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { PlusCircle, Upload } from "lucide-react";
+import { PlusCircle, Upload, Shield, Lock, UserPlus, AlertTriangle, Mail } from "lucide-react";
 import { Asset, AssetStatus, ApprovalStatus, UserRole, Employee } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -331,8 +331,9 @@ export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEm
       <Tabs defaultValue="employees" className="w-full">
         <div className="flex items-center justify-between mb-6">
           <TabsList className="bg-slate-100 p-1 border border-slate-200">
-            <TabsTrigger value="employees" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">Employee Directory</TabsTrigger>
-            <TabsTrigger value="users" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">System Users (Accounts)</TabsTrigger>
+            <TabsTrigger value="employees" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">Employee Roster</TabsTrigger>
+            <TabsTrigger value="users" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">Access Control (Users)</TabsTrigger>
+            <TabsTrigger value="security" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">Security Policy</TabsTrigger>
           </TabsList>
         </div>
         
@@ -372,6 +373,90 @@ export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEm
         </TabsContent>
         <TabsContent value="users" className="mt-0">
           <UsersList />
+        </TabsContent>
+        <TabsContent value="security" className="mt-0">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-8">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
+                <Shield className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black italic uppercase text-slate-900">Authentication & Access Policy</h3>
+                <p className="text-sm font-medium text-slate-500">System-wide security settings and compliance controls.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <Lock className="h-4 w-4" /> Sign-up Restrictions
+                </h4>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold">Domain Whitelist</p>
+                      <p className="text-xs text-slate-500">Only emails from these domains can register.</p>
+                    </div>
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Enforced</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary" className="bg-white border-slate-200">gmail.com</Badge>
+                    <Badge variant="secondary" className="bg-white border-slate-200">company-domain.com</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" /> Authorization Workflow
+                </h4>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold">Pre-Authorization Required</p>
+                      <p className="text-xs text-slate-500">Users must be in the roster to access system.</p>
+                    </div>
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium">This policy ensures that even with a valid login, users cannot see data unless the Employee Roster contains their email.</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" /> System Inheritance
+                </h4>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold">Root Administrator</p>
+                      <p className="text-xs text-slate-500">Primary system architect account.</p>
+                    </div>
+                    <Badge className="bg-amber-100 text-amber-700 border-amber-200">Immortal</Badge>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-mono text-slate-600 bg-white p-2 rounded border border-slate-200">
+                    <Mail size={12} /> dinkuh12@gmail.com
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <Shield className="h-4 w-4" /> Session Management
+                </h4>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold">JWT Expiry</p>
+                      <p className="text-xs text-slate-500">Default session duration.</p>
+                    </div>
+                    <span className="text-sm font-mono font-bold">3600s</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium italic">Managed via Supabase Auth configuration.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
