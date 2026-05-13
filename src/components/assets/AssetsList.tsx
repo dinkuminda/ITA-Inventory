@@ -248,13 +248,16 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 italic">Assets</h2>
-          <p className="text-sm font-medium text-slate-500">Manage and track physical equipment across all locations.</p>
+          <h2 className="text-4xl font-black tracking-tight text-foreground italic">Resource Registry</h2>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-70">
+            {isAdmin ? 'Complete Organizational Inventory' : 'Your Assigned Digital Equity'}
+          </p>
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        
+        <div className="flex flex-wrap items-center gap-3">
           {hasEditPermission && (
             <>
               <Input
@@ -268,78 +271,83 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
                 }}
               />
               <Button 
-                variant="outline" 
+                variant="secondary" 
                 onClick={() => handleExport()}
-                className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-slate-50 text-slate-600 transition-all font-bold gap-2 flex-1 md:flex-none"
+                className="h-12 px-6 rounded-2xl transition-all font-black gap-2"
               >
                 <Upload className="h-5 w-5" />
                 Export
               </Button>
               <Button 
-                variant="outline" 
+                variant="secondary" 
                 onClick={() => document.getElementById('assets-bulk-import')?.click()}
-                className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-slate-50 text-slate-600 transition-all font-bold gap-2 flex-1 md:flex-none"
+                className="h-12 px-6 rounded-2xl transition-all font-black gap-2"
               >
                 <Upload className="h-5 w-5" />
                 Import
               </Button>
+              <Button 
+                onClick={() => { resetForm(); setIsDialogOpen(true); }} 
+                className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 transition-all font-black gap-2 hover:scale-105"
+              >
+                <PlusCircle className="h-5 w-5" />
+                New Asset
+              </Button>
             </>
           )}
-          <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-12 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20 transition-all font-bold gap-2 flex-1 md:flex-none">
-            <PlusCircle className="h-5 w-5" />
-            Add Asset
-          </Button>
         </div>
       </div>
       
       {loading ? (
-        <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-muted rounded w-1/3"></div>
-          <div className="h-64 bg-muted rounded"></div>
+        <div className="animate-pulse space-y-6">
+          <div className="h-12 bg-muted rounded-[2rem] w-1/3"></div>
+          <div className="h-[400px] bg-muted rounded-[3rem]"></div>
         </div>
       ) : (
-        <DataTable
-          title="Asset"
-          data={displayedAssets}
-          columns={columns}
-          onAdd={undefined}
-          onExport={handleExport}
-          onImport={hasEditPermission ? handleImport : undefined}
-          onEdit={hasEditPermission ? (asset) => { 
-            setEditingAsset(asset);
-            const isGotera = asset.location === 'Gotera HQ office';
-            let floor = '';
-            let side = '';
-            
-            if (isGotera && asset.specificLocation) {
-              const parts = asset.specificLocation.split(' - ');
-              floor = parts[0] || '';
-              side = parts[1] || '';
-            }
+        <div className="bg-card rounded-[3rem] shadow-xl shadow-primary/5 border border-border overflow-hidden p-2">
+          <DataTable
+            title="Asset"
+            data={displayedAssets}
+            columns={columns}
+            onAdd={undefined}
+            onExport={handleExport}
+            onImport={hasEditPermission ? handleImport : undefined}
+            onEdit={hasEditPermission ? (asset) => { 
+              setEditingAsset(asset);
+              const isGotera = asset.location === 'Gotera HQ office';
+              let floor = '';
+              let side = '';
+              
+              if (isGotera && asset.specificLocation) {
+                const parts = asset.specificLocation.split(' - ');
+                floor = parts[0] || '';
+                side = parts[1] || '';
+              }
 
-            setLocationDetails({ floor, side });
-            setFormData({
-              name: asset.name,
-              type: asset.type,
-              serialNumber: asset.serialNumber || '',
-              status: asset.status,
-              location: asset.location || LOCATIONS[0],
-              specificLocation: asset.specificLocation || '',
-              assignedTo: asset.assignedTo || '',
-              roles: asset.roles || '',
-              date: asset.date || new Date().toISOString().split('T')[0],
-              remark: asset.remark || '',
-            });
-            setIsDialogOpen(true); 
-          } : undefined}
-          onDelete={isAdmin ? handleDelete : undefined}
-          onViewQR={(asset) => {
-            setQRAsset(asset);
-            setIsQRDialogOpen(true);
-          }}
-          useDirectActions={true}
-          searchPlaceholder="Search assets..."
-        />
+              setLocationDetails({ floor, side });
+              setFormData({
+                name: asset.name,
+                type: asset.type,
+                serialNumber: asset.serialNumber || '',
+                status: asset.status,
+                location: asset.location || LOCATIONS[0],
+                specificLocation: asset.specificLocation || '',
+                assignedTo: asset.assignedTo || '',
+                roles: asset.roles || '',
+                date: asset.date || new Date().toISOString().split('T')[0],
+                remark: asset.remark || '',
+              });
+              setIsDialogOpen(true); 
+            } : undefined}
+            onDelete={isAdmin ? handleDelete : undefined}
+            onViewQR={(asset) => {
+              setQRAsset(asset);
+              setIsQRDialogOpen(true);
+            }}
+            useDirectActions={true}
+            searchPlaceholder="Search assets..."
+          />
+        </div>
       )}
 
       {/* QR Code Dialog */}
@@ -592,6 +600,16 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Floating Action Button - Classic Flutter Pattern */}
+      {hasEditPermission && (
+        <Button 
+          onClick={() => { resetForm(); setIsDialogOpen(true); }} 
+          className="fixed bottom-10 right-10 h-20 w-20 rounded-[2.2rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300 z-50 group border-4 border-background"
+        >
+          <PlusCircle className="h-10 w-10 group-hover:rotate-90 transition-transform duration-500" />
+        </Button>
+      )}
     </div>
   );
 }

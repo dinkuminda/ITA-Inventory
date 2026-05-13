@@ -106,130 +106,129 @@ export function Dashboard({ userRole, userEmail }: { userRole?: UserRole, userEm
   ].filter(d => d.value > 0);
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6 bg-slate-50/50 min-h-screen">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent italic">
-          System Overview
-        </h2>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-white px-3 py-1 rounded-full border shadow-sm">
-          <Activity size={14} className="text-green-500 animate-pulse" />
-          Live Monitoring Active
+    <div className="flex-1 space-y-6 p-8 pt-6 bg-background min-h-screen">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h2 className="text-4xl font-black tracking-tight text-foreground italic flex items-center gap-3">
+            System Overview
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse mt-2" />
+          </h2>
+          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest opacity-70">
+            Next-Gen Monitoring Solutions
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-xs font-black bg-secondary text-secondary-foreground px-4 py-2 rounded-full border border-border shadow-sm tracking-widest uppercase">
+          <Activity size={14} className="text-emerald-500" />
+          Live Status
         </div>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <ShadCard className="overflow-hidden border-none shadow-md ring-1 ring-blue-100 bg-white group hover:shadow-lg transition-all duration-300">
-          <div className="h-1 w-full bg-blue-500" />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <ShadCard className="overflow-hidden border-none shadow-xl shadow-primary/5 bg-card group hover:scale-[1.02] transition-all duration-500 rounded-[2.5rem]">
+          <div className="h-2 w-full bg-primary" />
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-sm font-semibold text-blue-900">{isStaff ? 'My Assets' : 'Total Assets'}</ShadCardTitle>
-            <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
-              <Laptop className="h-4 w-4 text-blue-600" />
+            <ShadCardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              {isStaff ? 'My Assets' : 'Inventory'}
+            </ShadCardTitle>
+            <div className="p-3 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
+              <Laptop size={20} />
             </div>
           </ShadCardHeader>
-          <ShadCardContent>
-            <div className="text-3xl font-bold text-blue-950">{totalAssets}</div>
-            <p className="text-xs text-blue-600 font-medium flex items-center gap-1 mt-1">
-              {isStaff ? 'Assets assigned to you' : 'Inventory units tracked'} <ArrowUpRight size={12} />
+          <ShadCardContent className="pt-2">
+            <div className="text-4xl font-black text-foreground italic">{totalAssets}</div>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2 flex items-center gap-1">
+              Active Units <ArrowUpRight size={10} />
             </p>
           </ShadCardContent>
         </ShadCard>
 
-        <ShadCard className="overflow-hidden border-none shadow-md ring-1 ring-purple-100 bg-white group hover:shadow-lg transition-all duration-300">
-          <div className="h-1 w-full bg-purple-500" />
+        <ShadCard className="overflow-hidden border-none shadow-xl shadow-primary/5 bg-card group hover:scale-[1.02] transition-all duration-500 rounded-[2.5rem]">
+          <div className="h-2 w-full bg-chart-1" />
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-sm font-semibold text-purple-900">{isStaff ? 'My Licenses' : 'Software Licenses'}</ShadCardTitle>
-            <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
-              <Key className="h-4 w-4 text-purple-600" />
+            <ShadCardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              {isStaff ? 'My Licenses' : 'Software'}
+            </ShadCardTitle>
+            <div className="p-3 bg-chart-1/10 text-chart-1 rounded-2xl group-hover:bg-chart-1 group-hover:text-primary-foreground transition-all duration-500">
+              <Key size={20} />
             </div>
           </ShadCardHeader>
-          <ShadCardContent>
-            <div className="text-3xl font-bold text-purple-950">{activeLicenses}</div>
-            <p className="text-xs text-purple-600 font-medium mt-1">
-              {isStaff ? 'Your assigned licenses' : 'Active subscriptions'}
+          <ShadCardContent className="pt-2">
+            <div className="text-4xl font-black text-foreground italic">{activeLicenses}</div>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2">
+              Valid Keys
             </p>
           </ShadCardContent>
         </ShadCard>
 
-        <ShadCard className="overflow-hidden border-none shadow-md ring-1 ring-amber-100 bg-white group hover:shadow-lg transition-all duration-300">
-          <div className="h-1 w-full bg-amber-500" />
+        <ShadCard className="overflow-hidden border-none shadow-xl shadow-primary/5 bg-card group hover:scale-[1.02] transition-all duration-500 rounded-[2.5rem]">
+          <div className="h-2 w-full bg-destructive" />
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-sm font-semibold text-amber-900">{isStaff ? 'My Pending Repairs' : 'Pending Repairs'}</ShadCardTitle>
-            <div className={`p-2 rounded-lg transition-colors ${pendingMaintenance > 0 ? 'bg-red-50 group-hover:bg-red-100' : 'bg-amber-50 group-hover:bg-amber-100'}`}>
-              <ShieldAlert className={`h-4 w-4 ${pendingMaintenance > 0 ? 'text-red-500' : 'text-amber-600'}`} />
+            <ShadCardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Maintenance
+            </ShadCardTitle>
+            <div className={`p-3 rounded-2xl transition-all duration-500 ${pendingMaintenance > 0 ? 'bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+              <ShieldAlert size={20} />
             </div>
           </ShadCardHeader>
-          <ShadCardContent>
-            <div className={`text-3xl font-bold ${pendingMaintenance > 0 ? 'text-red-600' : 'text-amber-950'}`}>
+          <ShadCardContent className="pt-2">
+            <div className={`text-4xl font-black italic ${pendingMaintenance > 0 ? 'text-destructive' : 'text-foreground'}`}>
               {pendingMaintenance}
             </div>
-            <p className="text-xs text-amber-600 font-medium mt-1">
-              {isStaff ? 'Tickets for your assets' : 'Active service tickets'}
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2">
+              Pending Tickets
             </p>
           </ShadCardContent>
         </ShadCard>
 
-        <ShadCard className="overflow-hidden border-none shadow-md ring-1 ring-emerald-100 bg-white group hover:shadow-lg transition-all duration-300">
-          <div className="h-1 w-full bg-emerald-500" />
+        <ShadCard className="overflow-hidden border-none shadow-xl shadow-primary/5 bg-card group hover:scale-[1.02] transition-all duration-500 rounded-[2.5rem]">
+          <div className="h-2 w-full bg-emerald-500" />
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-sm font-semibold text-emerald-900">{isStaff ? 'Member Since' : 'Staff Count'}</ShadCardTitle>
-            <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
-              <Users className="h-4 w-4 text-emerald-600" />
+            <ShadCardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              {isStaff ? 'Verify' : 'Staff'}
+            </ShadCardTitle>
+            <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-2xl group-hover:bg-emerald-500 group-hover:text-primary-foreground transition-all duration-500">
+              <Users size={20} />
             </div>
           </ShadCardHeader>
-          <ShadCardContent>
-            <div className="text-3xl font-bold text-emerald-950">
-              {isStaff ? (employees.find(e => e.email === userEmail)?.joinDate ? format(new Date(employees.find(e => e.email === userEmail).joinDate), 'MMM yyyy') : 'N/A') : assignedUsers}
+          <ShadCardContent className="pt-2">
+            <div className="text-4xl font-black text-foreground italic">
+              {isStaff ? (employees.find(e => e.email === userEmail)?.joinDate ? format(new Date(employees.find(e => e.email === userEmail).joinDate), 'MMM yy') : 'N/A') : assignedUsers}
             </div>
-            <div className="flex items-center gap-1">
-              {!isStaff && (
-                <div className="w-full bg-emerald-50 h-1.5 rounded-full mt-2">
-                  <div 
-                    className="bg-emerald-500 h-full rounded-full" 
-                    style={{ width: `${assignedUsers > 0 ? Math.min((assignedUsers / 50) * 100, 100) : 0}%` }}
-                  />
-                </div>
-              )}
-              {isStaff && <p className="text-xs text-emerald-600 font-medium mt-1">Employee verified</p>}
-            </div>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2 italic">
+               {isStaff ? 'Operational status' : 'Total Personnel'}
+            </p>
           </ShadCardContent>
         </ShadCard>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <ShadCard className="col-span-4 border-none shadow-sm ring-1 ring-slate-200">
-          <ShadCardHeader className="flex flex-row items-center justify-between">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        <ShadCard className="col-span-4 border-none shadow-xl shadow-primary/5 bg-card rounded-[3rem]">
+          <ShadCardHeader className="flex flex-row items-center justify-between p-8 pb-4">
             <div className="space-y-1">
-              <ShadCardTitle className="text-lg">Category Distribution</ShadCardTitle>
-              <ShadCardDescription>Asset units by their primary type</ShadCardDescription>
+              <ShadCardTitle className="text-2xl font-black tracking-tight italic">Category Pulse</ShadCardTitle>
+              <ShadCardDescription className="text-xs font-bold uppercase tracking-widest">Asset distribution hierarchy</ShadCardDescription>
             </div>
-            <div className="p-2 bg-slate-50 rounded-full">
-              <History size={16} className="text-slate-400" />
+            <div className="p-3 bg-secondary rounded-2xl">
+              <History size={20} className="text-muted-foreground" />
             </div>
           </ShadCardHeader>
-          <ShadCardContent className="pl-2">
+          <ShadCardContent className="p-8 pt-0">
             <div className="h-[350px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={assetChartData.length > 0 ? assetChartData : [{ name: 'None', count: 0, fill: '#64748b' }]}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis 
                     dataKey="name" 
-                    fontSize={12} 
+                    fontSize={10} 
                     tickLine={false} 
                     axisLine={false} 
-                    tick={{ fill: '#64748b' }}
-                  />
-                  <YAxis 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    tickFormatter={(value) => `${value}`}
-                    tick={{ fill: '#64748b' }}
+                    tick={{ fill: 'var(--muted-foreground)', fontWeight: '800' }}
+                    textAnchor="middle"
                   />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', padding: '16px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: 'var(--secondary)', radius: 12 }}
                   />
-                  <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={40}>
+                  <Bar dataKey="count" radius={[12, 12, 12, 12]} barSize={32}>
                     {assetChartData.map((entry, index) => (
                       <Cell key={`bar-cell-${index}`} fill={entry.fill} />
                     ))}
@@ -240,12 +239,12 @@ export function Dashboard({ userRole, userEmail }: { userRole?: UserRole, userEm
           </ShadCardContent>
         </ShadCard>
 
-        <ShadCard className="col-span-3 border-none shadow-sm ring-1 ring-slate-200 overflow-hidden">
-          <ShadCardHeader className="bg-slate-50/50 pb-4">
-            <ShadCardTitle className="text-lg">Inventory Health</ShadCardTitle>
-            <ShadCardDescription>Operational status distribution</ShadCardDescription>
+        <ShadCard className="col-span-3 border-none shadow-xl shadow-primary/5 bg-card rounded-[3rem] overflow-hidden">
+          <ShadCardHeader className="p-8 pb-4">
+            <ShadCardTitle className="text-2xl font-black tracking-tight italic">Inventory Health</ShadCardTitle>
+            <ShadCardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Live operational metrics</ShadCardDescription>
           </ShadCardHeader>
-          <ShadCardContent className="pt-6">
+          <ShadCardContent className="p-8 pt-0">
             <div className="h-[250px] relative">
               {statusChartData.length > 0 ? (
                 <>
@@ -255,42 +254,41 @@ export function Dashboard({ userRole, userEmail }: { userRole?: UserRole, userEm
                         data={statusChartData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={75}
-                        outerRadius={95}
-                        paddingAngle={8}
+                        innerRadius={90}
+                        outerRadius={110}
+                        paddingAngle={12}
                         dataKey="value"
-                        animationDuration={1000}
+                        animationDuration={1500}
                         stroke="none"
+                        cornerRadius={12}
                       >
                         {statusChartData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
                       <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-3xl font-bold text-slate-800">{totalAssets}</span>
-                    <span className="text-xs text-slate-400 font-medium">Assets</span>
+                    <span className="text-5xl font-black text-foreground italic">{totalAssets}</span>
+                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-1">Units</span>
                   </div>
                 </>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
-                  <AlertCircle size={32} className="text-slate-200" />
-                  No data points available
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-4">
+                  <AlertCircle size={48} className="opacity-20 translate-y-2" />
+                  <span className="font-bold uppercase tracking-widest italic opacity-50">Data Outage</span>
                 </div>
               )}
             </div>
-            <div className="mt-8 grid grid-cols-2 gap-4">
+            <div className="mt-8 flex flex-wrap gap-3 justify-center">
               {statusChartData.map((item) => (
-                <div key={item.name} className="flex flex-col gap-1 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{item.name}</span>
-                  </div>
-                  <span className="text-xl font-bold text-slate-800 ml-3">{item.value}</span>
+                <div key={item.name} className="flex items-center gap-3 px-4 py-2 rounded-full border border-border bg-secondary/50">
+                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{item.name}</span>
+                  <span className="text-sm font-black text-foreground ml-1">{item.value}</span>
                 </div>
               ))}
             </div>

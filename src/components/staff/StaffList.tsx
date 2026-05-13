@@ -522,6 +522,16 @@ export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEm
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Floating Action Button - Classic Flutter Pattern */}
+      {isAdmin && (
+        <Button 
+          onClick={() => { resetForm(); setIsDialogOpen(true); }} 
+          className="fixed bottom-10 right-10 h-20 w-20 rounded-[2.2rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300 z-50 group border-4 border-background"
+        >
+          <PlusCircle className="h-10 w-10 group-hover:rotate-90 transition-transform duration-500" />
+        </Button>
+      )}
     </div>
   );
 }

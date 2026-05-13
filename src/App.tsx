@@ -175,15 +175,15 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-blue-600">
-        <div className="flex flex-col items-center gap-6">
+      <div className="min-h-screen flex items-center justify-center bg-background text-primary">
+        <div className="flex flex-col items-center gap-8">
           <div className="relative">
-             <div className="animate-spin rounded-full h-16 w-16 border-[3px] border-slate-200 border-t-blue-600"></div>
-             <Boxes className="absolute inset-0 m-auto h-6 w-6 text-blue-600" />
+             <div className="animate-spin rounded-full h-20 w-20 border-[4px] border-secondary border-t-primary"></div>
+             <Boxes className="absolute inset-0 m-auto h-8 w-8 text-primary" />
           </div>
-          <div className="text-center space-y-1">
-            <p className="text-lg font-bold text-slate-800">ITA Directorate</p>
-            <p className="text-sm text-slate-400 font-medium animate-pulse">Establishing secure session...</p>
+          <div className="text-center space-y-2">
+            <p className="text-2xl font-black tracking-tight text-foreground">ITA Directorate</p>
+            <p className="text-sm text-muted-foreground font-medium animate-pulse">Establishing secure session...</p>
           </div>
         </div>
       </div>
@@ -194,12 +194,15 @@ export default function App() {
   if (!user) {
     return (
       <>
-        <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4 font-sans text-[#475569]">
-          <div className="w-full max-w-md space-y-10 bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-blue-500/5 border border-slate-100">
-            <div className="text-center space-y-3">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">ITA Directorate</h1>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] opacity-60">
-                Inventory System
+        <div className="min-h-screen flex items-center justify-center bg-background p-4 sm:p-8">
+          <div className="w-full max-w-lg space-y-12 bg-card p-8 sm:p-12 rounded-[2.5rem] shadow-xl shadow-primary/5 border border-border mt-[-10vh]">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6">
+                <Boxes size={32} />
+              </div>
+              <h1 className="text-4xl font-black tracking-tight text-foreground italic">ITA Directorate</h1>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.25em] opacity-80">
+                Next-Gen Inventory Control
               </p>
             </div>
 
@@ -233,8 +236,8 @@ export default function App() {
                 </div>
                 <div className="pt-4">
                   <Button 
-                    variant="outline" 
-                    className="w-full h-16 rounded-2xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 text-lg shadow-sm"
+                    variant="secondary" 
+                    className="w-full h-16 rounded-3xl font-bold text-secondary-foreground text-lg shadow-sm"
                     onClick={() => {
                       setSignupSuccess(false);
                       setIsSignUp(false);
@@ -254,8 +257,8 @@ export default function App() {
                 {isForgotPassword ? (
                 <div className="space-y-6">
                   <div className="text-center">
-                    <h2 className="text-xl font-bold text-slate-800">Reset Password</h2>
-                    <p className="text-sm text-slate-500 mt-2">Enter your email and we'll send you a link to reset your password.</p>
+                    <h2 className="text-xl font-bold text-foreground">Reset Password</h2>
+                    <p className="text-sm text-muted-foreground mt-2">Enter your email and we'll send you a link to reset your password.</p>
                   </div>
                   <div className="space-y-1">
                     <Input
@@ -263,14 +266,14 @@ export default function App() {
                       placeholder="Email Address *"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="rounded-2xl h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-primary focus:border-primary transition-all text-base px-6 placeholder:text-slate-400 shadow-sm"
+                      className="rounded-2xl h-14 bg-muted border-none focus:ring-2 focus:ring-primary transition-all text-base px-6 placeholder:text-muted-foreground shadow-sm"
                       required
                     />
                   </div>
                   <div className="pt-2">
                     <Button 
                       type="submit" 
-                      className="w-full h-16 rounded-[1.25rem] bg-[#0066FF] hover:bg-[#0052CC] text-white text-lg font-bold shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] border-none" 
+                      className="w-full h-16 rounded-3xl bg-primary hover:opacity-90 text-primary-foreground text-lg font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98] border-none" 
                       disabled={loading}
                     >
                       Send Reset Link
@@ -280,7 +283,7 @@ export default function App() {
                     <button 
                       type="button" 
                       onClick={() => setIsForgotPassword(false)}
-                      className="text-sm font-bold text-slate-500 hover:text-slate-700 underline"
+                      className="text-sm font-bold text-muted-foreground hover:text-foreground underline"
                     >
                       Back to Login
                     </button>
@@ -295,7 +298,7 @@ export default function App() {
                         placeholder="Full Name *"
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
-                        className="rounded-2xl h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-primary focus:border-primary transition-all text-base px-6 placeholder:text-slate-400 shadow-sm"
+                        className="rounded-2xl h-14 bg-muted border-none focus:ring-2 focus:ring-primary transition-all text-base px-6 placeholder:text-muted-foreground shadow-sm"
                         required
                       />
                     </div>
@@ -306,7 +309,7 @@ export default function App() {
                       placeholder="Email Address *"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="rounded-2xl h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-primary focus:border-primary transition-all text-base px-6 placeholder:text-slate-400 shadow-sm"
+                      className="rounded-2xl h-14 bg-muted border-none focus:ring-2 focus:ring-primary transition-all text-base px-6 placeholder:text-muted-foreground shadow-sm"
                       required
                     />
                   </div>
@@ -317,13 +320,13 @@ export default function App() {
                         placeholder={isSignUp ? "Create Password *" : "Password *"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="rounded-2xl h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-primary focus:border-primary transition-all text-base px-6 pr-14 placeholder:text-slate-400 shadow-sm"
+                        className="rounded-2xl h-14 bg-muted border-none focus:ring-2 focus:ring-primary transition-all text-base px-6 pr-14 placeholder:text-muted-foreground shadow-sm"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none"
+                        className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors focus:outline-none"
                         title={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? <EyeOff size={22} strokeWidth={2.5} /> : <Eye size={22} strokeWidth={2.5} />}
@@ -339,13 +342,13 @@ export default function App() {
                           placeholder="Confirm Password *"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="rounded-2xl h-14 bg-slate-50 border-slate-100 focus:bg-white focus:ring-primary focus:border-primary transition-all text-base px-6 pr-14 placeholder:text-slate-400 shadow-sm"
+                          className="rounded-2xl h-14 bg-muted border-none focus:ring-2 focus:ring-primary transition-all text-base px-6 pr-14 placeholder:text-muted-foreground shadow-sm"
                           required
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none"
+                          className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors focus:outline-none"
                         >
                           {showConfirmPassword ? <EyeOff size={22} strokeWidth={2.5} /> : <Eye size={22} strokeWidth={2.5} />}
                         </button>
@@ -358,7 +361,7 @@ export default function App() {
                       <button 
                         type="button" 
                         onClick={() => setIsForgotPassword(true)}
-                        className="text-sm font-bold text-[#0066FF] hover:underline"
+                        className="text-sm font-bold text-primary hover:underline"
                       >
                         Forgot password?
                       </button>
@@ -368,7 +371,7 @@ export default function App() {
                   <div className="pt-2">
                     <Button 
                       type="submit" 
-                      className="w-full h-16 rounded-[1.25rem] bg-[#0066FF] hover:bg-[#0052CC] text-white text-lg font-bold shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] border-none" 
+                      className="w-full h-16 rounded-3xl bg-primary hover:opacity-90 text-primary-foreground text-lg font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98] border-none" 
                       disabled={loading}
                     >
                       {loading ? (
@@ -396,7 +399,7 @@ export default function App() {
                       setPassword('');
                       setConfirmPassword('');
                     }}
-                    className="text-[#0066FF] hover:underline font-bold text-lg transition-all"
+                    className="text-primary hover:underline font-bold text-lg transition-all"
                   >
                     {isSignUp ? "Already have an account? Log In" : "Don't have an account? Sign Up"}
                   </button>
@@ -404,13 +407,13 @@ export default function App() {
               </>
             )}
 
-            <div className="text-center pt-6 border-t border-slate-50 flex flex-col items-center gap-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">
+            <div className="text-center pt-6 border-t border-border flex flex-col items-center gap-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.25em]">
                 Authorized Personnel Only
               </p>
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-secondary rounded-full border border-border">
                 <div className={`h-1.5 w-1.5 rounded-full ${import.meta.env.VITE_SUPABASE_URL ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">
                   {import.meta.env.VITE_SUPABASE_URL ? 'Supabase Active' : 'Supabase Not Configured'}
                 </span>
               </div>
@@ -433,7 +436,7 @@ export default function App() {
 
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="flex min-h-screen w-full bg-[#fdfdfd] text-slate-600">
+      <div className="flex min-h-screen w-full bg-background text-foreground font-sans">
         <AppSidebar
           user={{ 
             email: user.email || '', 
@@ -442,23 +445,33 @@ export default function App() {
           }}
           onLogout={handleLogout}
         />
-        <main className="flex-1 overflow-auto">
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-white/80 backdrop-blur-md px-8">
-            <SidebarTrigger className="hover:bg-slate-100 rounded-xl" />
-            <div className="flex-1 flex items-center gap-4">
-               <div className="h-6 w-px bg-slate-200" />
-               <span className="text-xs font-black text-blue-600 uppercase tracking-[0.2em]">
-                 {effectiveProfile?.role || 'Guest Access'}
-               </span>
+        <main className="flex-1 overflow-auto flex flex-col">
+          <header className="sticky top-0 z-10 flex h-24 items-center justify-between border-b bg-background/95 backdrop-blur-md px-10 border-border/10">
+            <div className="flex items-center gap-6">
+              <SidebarTrigger className="hover:bg-secondary rounded-[2rem] h-14 w-14 shadow-sm border border-border/5" />
+              <div className="h-10 w-[2px] bg-border rounded-full" />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em] leading-none mb-1.5">
+                  Authority Hub
+                </span>
+                <span className="text-sm font-bold text-foreground">
+                  {effectiveProfile?.role === UserRole.ADMIN ? 'Architect Strategy Console' : 'Operator Logistics Console'}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600 rounded-xl">
-                  <SettingsIcon size={20} />
+            
+            <div className="flex items-center gap-4">
+                <div className="mr-4 hidden lg:block">
+                  <p className="text-right text-[10px] font-bold text-muted-foreground uppercase opacity-60 tracking-widest">Protocol Status: Secure</p>
+                  <p className="text-right text-xs font-bold text-foreground">{effectiveProfile?.email}</p>
+                </div>
+                <Button variant="secondary" size="icon" className="h-14 w-14 rounded-[2rem] shadow-sm border border-border/5 group">
+                  <SettingsIcon size={24} className="text-muted-foreground group-hover:text-primary transition-colors" />
                 </Button>
             </div>
           </header>
           
-          <div className="p-8 max-w-7xl mx-auto w-full">
+          <div className="p-10 max-w-7xl mx-auto w-full animate-in fade-in slide-in-from-bottom-6 duration-1000">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} />} />
@@ -474,13 +487,13 @@ export default function App() {
               } />
               <Route path="/settings" element={
                 effectiveProfile?.role === UserRole.ADMIN ? (
-                  <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-6">
-                    <div className="p-6 bg-slate-50 text-slate-400 rounded-[2rem] shadow-sm">
-                      <SettingsIcon size={64} strokeWidth={1.5} />
+                  <div className="flex flex-col items-center justify-center min-h-[500px] text-center space-y-12 animate-in zoom-in duration-1000">
+                    <div className="p-12 bg-secondary text-primary rounded-[4rem] shadow-2xl shadow-primary/5">
+                      <SettingsIcon size={100} strokeWidth={1} />
                     </div>
-                    <div className="space-y-2">
-                       <h2 className="text-2xl font-black text-slate-900 tracking-tight">System Settings</h2>
-                       <p className="text-slate-500 max-w-sm mx-auto font-medium">ICS Evidence configurations, log thresholds, and global security policies.</p>
+                    <div className="space-y-4 max-w-md">
+                       <h2 className="text-4xl font-extrabold tracking-tight text-foreground">Infrastructure Control</h2>
+                       <p className="text-muted-foreground font-medium italic">Execute core systemic modifications, protocol overrides, and security inheritance mapping.</p>
                     </div>
                   </div>
                 ) : (
