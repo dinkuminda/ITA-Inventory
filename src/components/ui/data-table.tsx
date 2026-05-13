@@ -74,24 +74,24 @@ export function DataTable<T extends { id: string }>({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex flex-1 items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground opacity-50" />
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground opacity-40 group-focus-within:opacity-100 transition-opacity" />
             <Input
               placeholder={searchPlaceholder}
-              className="pl-12 h-14 rounded-full bg-secondary/50 border-border/5 focus:bg-background transition-all shadow-sm font-medium"
+              className="pl-12 h-14 rounded-2xl bg-secondary/30 border-none focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-primary/20 transition-all shadow-none font-bold placeholder:text-muted-foreground/40"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="icon" className="h-14 w-14 rounded-full border-border/5 shadow-sm hover:bg-secondary">
+          <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-none bg-secondary/30 shadow-none hover:bg-secondary">
             <Filter className="h-5 w-5" />
           </Button>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {onExport && (
-            <Button variant="ghost" onClick={onExport} className="gap-2 h-14 px-6 rounded-full font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
+            <Button variant="ghost" onClick={onExport} className="gap-2 h-14 px-6 rounded-2xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
               <Download className="h-5 w-5" />
-              <span className="hidden lg:inline">Export CSV</span>
+              <span className="hidden lg:inline text-xs uppercase tracking-widest">Export</span>
             </Button>
           )}
           {onImport && (
@@ -108,16 +108,16 @@ export function DataTable<T extends { id: string }>({
               />
               <Button 
                 variant="ghost" 
-                className="gap-2 h-14 px-6 rounded-full font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+                className="gap-2 h-14 px-6 rounded-2xl font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
                 onClick={() => document.getElementById(`import-csv-${title}`)?.click()}
               >
                 <Upload className="h-5 w-5" />
-                <span className="hidden lg:inline">Import Records</span>
+                <span className="hidden lg:inline text-xs uppercase tracking-widest">Import</span>
               </Button>
             </div>
           )}
           {onAdd && (
-            <Button onClick={onAdd} className="gap-2 h-14 px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-black shadow-lg shadow-primary/20">
+            <Button onClick={onAdd} className="hidden sm:flex gap-2 h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black shadow-lg shadow-primary/20 uppercase tracking-widest text-xs">
               <PlusCircle className="h-5 w-5" />
               <span>Add {title}</span>
             </Button>
@@ -125,17 +125,17 @@ export function DataTable<T extends { id: string }>({
         </div>
       </div>
 
-      <div className="rounded-[2.5rem] border border-border/5 bg-card overflow-hidden shadow-2xl shadow-primary/5">
+      <div className="rounded-[2.5rem] border border-border/50 bg-card overflow-hidden shadow-xl shadow-primary/5">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-secondary/30">
+            <TableHeader className="bg-muted/50 border-b border-border/50">
               <TableRow className="hover:bg-transparent border-none">
                 {columns.map((col, i) => (
-                  <TableHead key={i} className="h-16 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+                  <TableHead key={i} className="h-16 px-8 text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
                     {col.header}
                   </TableHead>
                 ))}
-                <TableHead className={`h-16 px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-right ${useDirectActions ? "w-[160px]" : "w-[100px]"}`}>
+                <TableHead className={`h-16 px-8 text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em] text-right ${useDirectActions ? "w-[160px]" : "w-[100px]"}`}>
                   {actionsLabel}
                 </TableHead>
               </TableRow>
@@ -145,7 +145,7 @@ export function DataTable<T extends { id: string }>({
                 filteredData.map((item, index) => (
                   <TableRow 
                     key={item.id} 
-                    className={`hover:bg-secondary/50 border-border/5 transition-colors group ${index === filteredData.length - 1 ? 'border-none' : ''}`}
+                    className={`hover:bg-primary/5 border-border/50 transition-colors group ${index === filteredData.length - 1 ? 'border-none' : ''}`}
                   >
                     {columns.map((col, i) => (
                       <TableCell key={i} className="px-6 h-16 text-sm font-medium text-foreground">

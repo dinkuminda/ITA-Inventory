@@ -248,16 +248,16 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-12">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-foreground italic">Resource Registry</h2>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-70">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Resource Registry</h2>
+          <p className="text-sm text-muted-foreground">
             {isAdmin ? 'Complete Organizational Inventory' : 'Your Assigned Digital Equity'}
           </p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
           {hasEditPermission && (
             <>
               <Input
@@ -271,26 +271,29 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
                 }}
               />
               <Button 
-                variant="secondary" 
+                variant="outline" 
+                size="sm"
                 onClick={() => handleExport()}
-                className="h-12 px-6 rounded-2xl transition-all font-black gap-2"
+                className="h-9 px-4 rounded-md gap-2"
               >
-                <Upload className="h-5 w-5" />
+                <Upload className="h-4 w-4" />
                 Export
               </Button>
               <Button 
-                variant="secondary" 
+                variant="outline" 
+                size="sm"
                 onClick={() => document.getElementById('assets-bulk-import')?.click()}
-                className="h-12 px-6 rounded-2xl transition-all font-black gap-2"
+                className="h-9 px-4 rounded-md gap-2"
               >
-                <Upload className="h-5 w-5" />
+                <Upload className="h-4 w-4" />
                 Import
               </Button>
               <Button 
+                size="sm"
                 onClick={() => { resetForm(); setIsDialogOpen(true); }} 
-                className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 transition-all font-black gap-2 hover:scale-105"
+                className="h-9 px-4 rounded-md bg-primary text-primary-foreground gap-2"
               >
-                <PlusCircle className="h-5 w-5" />
+                <PlusCircle className="h-4 w-4" />
                 New Asset
               </Button>
             </>
@@ -299,12 +302,12 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
       </div>
       
       {loading ? (
-        <div className="animate-pulse space-y-6">
-          <div className="h-12 bg-muted rounded-[2rem] w-1/3"></div>
-          <div className="h-[400px] bg-muted rounded-[3rem]"></div>
+        <div className="animate-pulse space-y-4">
+          <div className="h-10 bg-muted rounded-md w-1/3"></div>
+          <div className="h-[400px] bg-muted rounded-md lowercase"></div>
         </div>
       ) : (
-        <div className="bg-card rounded-[3rem] shadow-xl shadow-primary/5 border border-border overflow-hidden p-2">
+        <div className="bg-card rounded-xl border border-border shadow-sm p-1">
           <DataTable
             title="Asset"
             data={displayedAssets}
@@ -352,7 +355,7 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
 
       {/* QR Code Dialog */}
       <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Asset QR Code</DialogTitle>
             <DialogDescription>
@@ -600,14 +603,13 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Floating Action Button - Classic Flutter Pattern */}
+      {/* Flutter style Floating Action Button */}
       {hasEditPermission && (
         <Button 
           onClick={() => { resetForm(); setIsDialogOpen(true); }} 
-          className="fixed bottom-10 right-10 h-20 w-20 rounded-[2.2rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300 z-50 group border-4 border-background"
+          className="fixed bottom-20 md:bottom-10 right-6 md:right-10 h-14 w-14 md:h-16 md:w-16 rounded-2xl md:rounded-[2rem] bg-primary text-primary-foreground shadow-xl shadow-primary/30 hover:scale-110 active:scale-95 transition-all duration-300 z-50 group border-b-4 border-primary-foreground/20"
         >
-          <PlusCircle className="h-10 w-10 group-hover:rotate-90 transition-transform duration-500" />
+          <PlusCircle className="h-6 w-6 md:h-8 md:w-8 group-hover:rotate-90 transition-transform duration-500" />
         </Button>
       )}
     </div>

@@ -270,27 +270,24 @@ export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEm
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 italic uppercase">Staff Control</h2>
-          <p className="text-sm font-medium text-slate-500">Coordinate access and authorized equipment holders.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Staff Control</h2>
+          <p className="text-sm text-muted-foreground">Coordinate access and authorized equipment holders.</p>
         </div>
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <form onSubmit={handleQuickRegister} className="flex flex-col gap-1 w-full md:w-auto">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="Authorize employee email..."
-                value={quickEmail}
-                onChange={(e) => setQuickEmail(e.target.value)}
-                className="w-full md:w-[280px] h-12 rounded-xl bg-white border-slate-200 shadow-sm focus:ring-emerald-500"
-              />
-              <Button type="submit" variant="secondary" className="h-12 px-6 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-900">Authorize</Button>
-            </div>
-            <p className="text-[10px] text-slate-400 px-1 font-bold uppercase tracking-wider">Manual authorization portal</p>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <form onSubmit={handleQuickRegister} className="flex gap-2 w-full sm:w-auto">
+            <Input
+              placeholder="Authorize email..."
+              value={quickEmail}
+              onChange={(e) => setQuickEmail(e.target.value)}
+              className="w-full sm:w-[240px] h-9 rounded-md text-xs"
+            />
+            <Button type="submit" variant="secondary" size="sm" className="h-9 px-4 rounded-md text-xs font-semibold">Authorize</Button>
           </form>
           
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             {isAdmin && (
               <>
                 <Input
@@ -305,154 +302,158 @@ export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEm
                 />
                 <Button 
                   variant="outline" 
+                  size="sm"
                   onClick={() => handleExport()}
-                  className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-slate-50 text-slate-600 transition-all font-bold gap-2 flex-1 md:flex-none"
+                  className="h-9 px-4 rounded-md gap-2"
                 >
-                  <Upload className="h-5 w-5" />
+                  <Upload className="h-4 w-4" />
                   Export
                 </Button>
                 <Button 
                   variant="outline" 
+                  size="sm"
                   onClick={() => document.getElementById('staff-bulk-import')?.click()}
-                  className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-slate-50 text-slate-600 transition-all font-bold gap-2 flex-1 md:flex-none"
+                  className="h-9 px-4 rounded-md gap-2"
                 >
-                  <Upload className="h-5 w-5" />
+                  <Upload className="h-4 w-4" />
                   Import
                 </Button>
               </>
             )}
-            <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-500/20 transition-all font-bold gap-2 flex-1 md:flex-none">
-              <PlusCircle className="h-5 w-5" />
+            <Button size="sm" onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-9 px-4 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+              <PlusCircle className="h-4 w-4" />
               Add Staff
             </Button>
           </div>
         </div>
       </div>
       <Tabs defaultValue="employees" className="w-full">
-        <div className="flex items-center justify-between mb-6">
-          <TabsList className="bg-slate-100 p-1 border border-slate-200">
-            <TabsTrigger value="employees" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">Employee Roster</TabsTrigger>
-            <TabsTrigger value="users" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">Access Control (Users)</TabsTrigger>
-            <TabsTrigger value="security" className="px-6 py-2 data-active:bg-white data-active:shadow-sm">Security Policy</TabsTrigger>
+        <div className="flex items-center justify-between mb-4 border-b">
+          <TabsList className="h-10 bg-transparent p-0 gap-6">
+            <TabsTrigger value="employees" className="h-10 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent shadow-none px-2">Employee Roster</TabsTrigger>
+            <TabsTrigger value="users" className="h-10 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent shadow-none px-2">Access Control</TabsTrigger>
+            <TabsTrigger value="security" className="h-10 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent shadow-none px-2">Security Policy</TabsTrigger>
           </TabsList>
         </div>
         
-        <TabsContent value="employees" className="mt-0">
+        <TabsContent value="employees" className="mt-0 ring-0 focus-visible:ring-0">
           <div className="space-y-4">
             {loading ? (
               <div className="animate-pulse space-y-4">
-                <div className="h-64 bg-muted rounded-xl"></div>
+                <div className="h-[400px] bg-muted rounded-xl"></div>
               </div>
              ) : (
-              <DataTable
-                title="Employee"
-                data={employees}
-                columns={columns}
-                onAdd={undefined}
-                onExport={handleExport}
-                onImport={isAdmin ? handleImport : undefined}
-                onEdit={isAdmin ? (employee) => {
-                  setEditingEmployee(employee);
-                  setFormData({
-                    employeeId: employee.employeeId,
-                    fullName: employee.fullName,
-                    email: employee.email,
-                    department: employee.department || '',
-                    position: employee.position || '',
-                    status: employee.status,
-                    joinDate: employee.joinDate,
-                  });
-                  setIsDialogOpen(true);
-                } : undefined}
-                onDelete={isAdmin ? handleDelete : undefined}
-                useDirectActions={true}
-                searchPlaceholder="Search staff..."
-              />
+              <div className="bg-card rounded-xl border border-border shadow-sm p-1">
+                <DataTable
+                  title="Employee"
+                  data={employees}
+                  columns={columns}
+                  onAdd={undefined}
+                  onExport={handleExport}
+                  onImport={isAdmin ? handleImport : undefined}
+                  onEdit={isAdmin ? (employee) => {
+                    setEditingEmployee(employee);
+                    setFormData({
+                      employeeId: employee.employeeId,
+                      fullName: employee.fullName,
+                      email: employee.email,
+                      department: employee.department || '',
+                      position: employee.position || '',
+                      status: employee.status,
+                      joinDate: employee.joinDate,
+                    });
+                    setIsDialogOpen(true);
+                  } : undefined}
+                  onDelete={isAdmin ? handleDelete : undefined}
+                  useDirectActions={true}
+                  searchPlaceholder="Search staff..."
+                />
+              </div>
             )}
           </div>
         </TabsContent>
-        <TabsContent value="users" className="mt-0">
+        <TabsContent value="users" className="mt-0 ring-0 focus-visible:ring-0">
           <UsersList />
         </TabsContent>
-        <TabsContent value="security" className="mt-0">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-8">
+        <TabsContent value="security" className="mt-0 ring-0 focus-visible:ring-0">
+          <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-8">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
-                <Shield className="h-6 w-6" />
+              <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+                <Shield className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-xl font-black italic uppercase text-slate-900">Authentication & Access Policy</h3>
-                <p className="text-sm font-medium text-slate-500">System-wide security settings and compliance controls.</p>
+                <h3 className="text-lg font-bold text-foreground">Authentication & Access Policy</h3>
+                <p className="text-xs text-muted-foreground">System-wide security settings and compliance controls.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <Lock className="h-4 w-4" /> Sign-up Restrictions
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2 border-b pb-2">
+                  <Lock className="h-3.5 w-3.5" /> Sign-up Restrictions
                 </h4>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold">Domain Whitelist</p>
-                      <p className="text-xs text-slate-500">Only emails from these domains can register.</p>
+                      <p className="text-sm font-semibold">Domain Whitelist</p>
+                      <p className="text-[10px] text-muted-foreground">Only emails from these domains can register.</p>
                     </div>
                     <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Enforced</Badge>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary" className="bg-white border-slate-200">gmail.com</Badge>
-                    <Badge variant="secondary" className="bg-white border-slate-200">company-domain.com</Badge>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="secondary" className="bg-background border text-[10px]">gmail.com</Badge>
+                    <Badge variant="secondary" className="bg-background border text-[10px]">company-domain.com</Badge>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" /> Authorization Workflow
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2 border-b pb-2">
+                  <UserPlus className="h-3.5 w-3.5" /> Authorization Workflow
                 </h4>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold">Pre-Authorization Required</p>
-                      <p className="text-xs text-slate-500">Users must be in the roster to access system.</p>
+                      <p className="text-sm font-semibold">Pre-Authorization Required</p>
+                      <p className="text-[10px] text-muted-foreground">Users must be in the roster to access system.</p>
                     </div>
                     <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-medium">This policy ensures that even with a valid login, users cannot see data unless the Employee Roster contains their email.</p>
+                  <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">Safety policy ensures that even with a valid login, users cannot see data unless the Employee Roster contains their email.</p>
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" /> System Inheritance
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2 border-b pb-2">
+                  <AlertTriangle className="h-3.5 w-3.5" /> System Inheritance
                 </h4>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold">Root Administrator</p>
-                      <p className="text-xs text-slate-500">Primary system architect account.</p>
+                      <p className="text-sm font-semibold">Root Administrator</p>
+                      <p className="text-[10px] text-muted-foreground">Primary system architect account.</p>
                     </div>
-                    <Badge className="bg-amber-100 text-amber-700 border-amber-200">Immortal</Badge>
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Protected</Badge>
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-mono text-slate-600 bg-white p-2 rounded border border-slate-200">
+                  <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground bg-background p-2 rounded border">
                     <Mail size={12} /> dinkuh12@gmail.com
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <Shield className="h-4 w-4" /> Session Management
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2 border-b pb-2">
+                  <Shield className="h-3.5 w-3.5" /> Session Management
                 </h4>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold">JWT Expiry</p>
-                      <p className="text-xs text-slate-500">Default session duration.</p>
+                      <p className="text-sm font-semibold">JWT Expiry</p>
+                      <p className="text-[10px] text-muted-foreground">Default session duration.</p>
                     </div>
-                    <span className="text-sm font-mono font-bold">3600s</span>
+                    <span className="text-xs font-mono font-bold">3600s</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-medium italic">Managed via Supabase Auth configuration.</p>
+                  <p className="text-[10px] text-muted-foreground font-medium italic">Managed via identity provider configuration.</p>
                 </div>
               </div>
             </div>
@@ -461,7 +462,7 @@ export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEm
       </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingEmployee ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
             <DialogDescription>
@@ -522,14 +523,13 @@ export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEm
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Floating Action Button - Classic Flutter Pattern */}
+      {/* Flutter style Floating Action Button */}
       {isAdmin && (
         <Button 
           onClick={() => { resetForm(); setIsDialogOpen(true); }} 
-          className="fixed bottom-10 right-10 h-20 w-20 rounded-[2.2rem] bg-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all duration-300 z-50 group border-4 border-background"
+          className="fixed bottom-20 md:bottom-10 right-6 md:right-10 h-14 w-14 md:h-16 md:w-16 rounded-2xl md:rounded-[2rem] bg-primary text-primary-foreground shadow-xl shadow-primary/30 hover:scale-110 active:scale-95 transition-all duration-300 z-50 group border-b-4 border-primary-foreground/20"
         >
-          <PlusCircle className="h-10 w-10 group-hover:rotate-90 transition-transform duration-500" />
+          <PlusCircle className="h-6 w-6 md:h-8 md:w-8 group-hover:rotate-90 transition-transform duration-500" />
         </Button>
       )}
     </div>

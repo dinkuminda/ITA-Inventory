@@ -258,33 +258,33 @@ export function UsersList() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">System Access</p>
+        <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">System Access</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-slate-900">{stats.total}</span>
-            <span className="text-xs text-slate-500 font-medium">Total Accounts</span>
+            <span className="text-2xl font-bold text-foreground">{stats.total}</span>
+            <span className="text-xs text-muted-foreground font-medium">Total Accounts</span>
           </div>
         </div>
-        <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 shadow-sm">
-          <p className="text-xs font-bold text-amber-600/70 uppercase tracking-widest mb-1">Administrative Control</p>
+        <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Administrative Control</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-amber-700">{stats.admins}</span>
-            <span className="text-xs text-amber-600 font-medium">Privileged Users</span>
+            <span className="text-2xl font-bold text-amber-600">{stats.admins}</span>
+            <span className="text-xs text-muted-foreground font-medium">Privileged Users</span>
           </div>
         </div>
-        <div className=" Cedarville bg-rose-50/50 p-4 rounded-xl border border-rose-100 shadow-sm">
-          <p className="text-xs font-bold text-rose-600/70 uppercase tracking-widest mb-1">Security Alerts</p>
+        <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Security Alerts</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-rose-700">{stats.unauthorized}</span>
-            <span className="text-xs text-rose-600 font-medium">Pending Authorization</span>
+            <span className="text-2xl font-bold text-rose-600">{stats.unauthorized}</span>
+            <span className="text-xs text-muted-foreground font-medium">Pending Authorization</span>
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-black italic uppercase text-slate-900 tracking-tight">System User Management</h3>
-          <p className="text-xs font-medium text-slate-500">Inventory of authenticated accounts and their operational permissions.</p>
+        <div className="space-y-1">
+          <h3 className="text-lg font-bold tracking-tight text-foreground">User Management</h3>
+          <p className="text-xs text-muted-foreground">Inventory of authenticated accounts and their operational permissions.</p>
         </div>
         {stats.unauthorized > 0 && (
           <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 gap-1 animate-pulse">
@@ -295,17 +295,19 @@ export function UsersList() {
       
       {loading ? (
         <div className="animate-pulse space-y-4">
-          <div className="h-64 bg-muted rounded"></div>
+          <div className="h-64 bg-muted rounded-xl lowercase"></div>
         </div>
       ) : (
-        <DataTable
-          title="User"
-          data={profiles}
-          columns={columns}
-          onDelete={handleDelete}
-          useDirectActions={true}
-          searchPlaceholder="Search users..."
-        />
+        <div className="bg-card rounded-xl border border-border shadow-sm p-1">
+          <DataTable
+            title="User"
+            data={profiles}
+            columns={columns}
+            onDelete={handleDelete}
+            useDirectActions={true}
+            searchPlaceholder="Search users..."
+          />
+        </div>
       )}
     </div>
   );

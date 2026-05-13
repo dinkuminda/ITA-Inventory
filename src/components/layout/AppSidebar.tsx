@@ -52,21 +52,21 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
   });
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border bg-sidebar h-full text-foreground">
-      <SidebarHeader className={`transition-all ${isCollapsed ? 'items-center px-2 py-4' : 'p-8'}`}>
-        <div className="flex items-center gap-4">
-          <div className="bg-primary text-primary-foreground p-3 rounded-2xl shadow-lg shadow-primary/20 shrink-0">
-            <Boxes size={28} />
+    <Sidebar collapsible="icon" className="border-r border-border bg-sidebar h-full text-foreground shadow-none">
+      <SidebarHeader className={`transition-all ${isCollapsed ? 'items-center px-2 py-4' : 'p-6'}`}>
+        <div className="flex items-center gap-3">
+          <div className="bg-primary text-primary-foreground p-2 rounded-xl shrink-0 shadow-lg shadow-primary/20">
+            <Boxes size={22} />
           </div>
           {!isCollapsed && (
-            <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
-              <span className="font-black text-2xl tracking-tighter text-foreground italic">ITA</span>
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Directory</span>
+            <div className="flex flex-col">
+              <span className="font-black text-base tracking-tighter text-foreground uppercase">CloudInv</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] -mt-1">Inventory Sys</span>
             </div>
           )}
         </div>
       </SidebarHeader>
-      <SidebarContent className="py-2 px-2">
+      <SidebarContent className="py-4 px-3">
         <SidebarMenu className="gap-2">
           {filteredNavItems.map((item) => (
             <SidebarMenuItem key={item.path}>
@@ -75,14 +75,14 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                   <SidebarMenuButton
                     isActive={isActive}
                     tooltip={item.label}
-                    className={`h-14 px-4 rounded-[2rem] transition-all relative group ${
+                    className={`h-12 px-4 rounded-2xl transition-all duration-300 ${
                       isActive 
-                        ? 'bg-secondary text-secondary-foreground font-black' 
-                        : 'text-muted-foreground hover:bg-accent'
+                        ? 'bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 scale-[1.02]' 
+                        : 'text-muted-foreground hover:bg-muted font-bold'
                     }`}
                   >
-                    <div className={`flex items-center gap-3 w-full ${isActive ? 'translate-x-1' : ''} transition-transform`}>
-                      <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-primary' : ''} />
+                    <div className="flex items-center gap-4">
+                      <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                       {!isCollapsed && <span className="text-sm tracking-tight">{item.label}</span>}
                     </div>
                   </SidebarMenuButton>
@@ -92,23 +92,19 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className={`p-4 mt-auto transition-all ${isCollapsed ? 'px-2' : ''}`}>
+      <SidebarFooter className={`p-4 mt-auto border-t border-border/50 bg-muted/20 ${isCollapsed ? 'px-2' : ''}`}>
         <SidebarMenu className="gap-2">
           <SidebarMenuItem>
-            <div className={`flex items-center gap-3 py-4 bg-card rounded-[2rem] border border-border shadow-sm transition-all ${isCollapsed ? 'justify-center p-2' : 'px-4'}`}>
-              <Avatar className="h-12 w-12 border-2 border-background/50 shrink-0">
-                <AvatarFallback className="bg-primary text-primary-foreground font-black text-lg">
+            <div className={`flex items-center gap-3 py-3 ${isCollapsed ? 'justify-center transition-all' : 'px-2'}`}>
+              <Avatar className="h-10 w-10 shrink-0 border-2 border-background shadow-md">
+                <AvatarFallback className="bg-primary text-primary-foreground font-black text-xs">
                   {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
               {!isCollapsed && (
-                <div className="flex flex-col overflow-hidden animate-in fade-in duration-300">
-                  <span className="text-sm font-black text-foreground truncate italic">
-                    {user?.displayName || 'User'}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground truncate font-bold tracking-tight">
-                    {user?.email}
-                  </span>
+                <div className="flex flex-col min-w-0 transition-opacity duration-300">
+                  <span className="text-sm font-bold truncate text-foreground leading-none mb-1">{user?.displayName || 'User'}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">{user?.role?.toLowerCase()}</span>
                 </div>
               )}
             </div>
@@ -120,15 +116,15 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                   <SidebarMenuButton 
                     isActive={isActive}
                     tooltip="Settings"
-                    className={`h-14 px-4 rounded-[2rem] transition-all ${
+                    className={`h-12 px-4 rounded-2xl transition-all duration-300 ${
                       isActive 
-                        ? 'bg-secondary text-secondary-foreground font-black' 
-                        : 'text-muted-foreground hover:bg-accent'
+                        ? 'bg-accent text-accent-foreground font-bold shadow-sm' 
+                        : 'text-muted-foreground hover:bg-muted font-bold'
                     }`}
                   >
-                    <div className={`flex items-center gap-3 w-full ${isActive ? 'translate-x-1' : ''} transition-transform`}>
-                      <Settings size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-primary' : ''} />
-                      {!isCollapsed && <span className="text-sm tracking-tight font-medium">Settings</span>}
+                    <div className="flex items-center gap-4">
+                      <Settings size={20} strokeWidth={isActive ? 2.5 : 2} />
+                      {!isCollapsed && <span className="text-sm font-bold tracking-tight">Settings</span>}
                     </div>
                   </SidebarMenuButton>
                 )}
@@ -138,12 +134,12 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={onLogout} 
-              tooltip="Logout Session"
-              className={`h-14 px-4 rounded-[2rem] text-destructive hover:bg-destructive/10 transition-all font-black ${isCollapsed ? 'justify-center' : ''}`}
+              tooltip="Logout"
+              className={`h-12 px-4 rounded-2xl text-destructive hover:bg-destructive/10 transition-all font-bold ${isCollapsed ? 'justify-center' : ''}`}
             >
-              <div className="flex items-center gap-3 w-full">
-                <LogOut size={22} strokeWidth={2.5} />
-                {!isCollapsed && <span className="text-sm tracking-tight font-medium">Sign Out</span>}
+              <div className="flex items-center gap-4">
+                <LogOut size={20} strokeWidth={2.5} />
+                {!isCollapsed && <span className="text-sm font-bold tracking-tight">Log Out</span>}
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -185,14 +185,14 @@ export function LicensesList({ userRole, userEmail }: { userRole?: UserRole, use
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 italic">Licenses</h2>
-          <p className="text-sm font-medium text-slate-500">Manage software subscriptions and seat allocations.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Licenses</h2>
+          <p className="text-sm text-muted-foreground">Manage software subscriptions and seat allocations.</p>
         </div>
-        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-12 px-6 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white shadow-xl shadow-purple-500/20 transition-all font-bold gap-2">
-          <PlusCircle className="h-5 w-5" />
+        <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-9 px-4 rounded-md font-semibold gap-2">
+          <PlusCircle className="h-4 w-4" />
           Add License
         </Button>
       </div>
@@ -308,6 +308,13 @@ export function LicensesList({ userRole, userEmail }: { userRole?: UserRole, use
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Flutter style Floating Action Button */}
+      <Button 
+        onClick={() => { resetForm(); setIsDialogOpen(true); }} 
+        className="fixed bottom-20 md:bottom-10 right-6 md:right-10 h-14 w-14 md:h-16 md:w-16 rounded-2xl md:rounded-[2rem] bg-primary text-primary-foreground shadow-xl shadow-primary/30 hover:scale-110 active:scale-95 transition-all duration-300 z-50 group border-b-4 border-primary-foreground/20"
+      >
+        <PlusCircle className="h-6 w-6 md:h-8 md:w-8 group-hover:rotate-90 transition-transform duration-500" />
+      </Button>
     </div>
   );
 }

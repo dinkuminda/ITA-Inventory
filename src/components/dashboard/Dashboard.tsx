@@ -106,114 +106,97 @@ export function Dashboard({ userRole, userEmail }: { userRole?: UserRole, userEm
   ].filter(d => d.value > 0);
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6 bg-background min-h-screen">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-foreground italic flex items-center gap-3">
-            System Overview
-            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse mt-2" />
-          </h2>
-          <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest opacity-70">
-            Next-Gen Monitoring Solutions
-          </p>
-        </div>
-        <div className="flex items-center gap-3 text-xs font-black bg-secondary text-secondary-foreground px-4 py-2 rounded-full border border-border shadow-sm tracking-widest uppercase">
-          <Activity size={14} className="text-emerald-500" />
-          Live Status
-        </div>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">Overview</h2>
+        <p className="text-muted-foreground">Monitoring organizational resources and performance analytics.</p>
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <ShadCard className="overflow-hidden border-none shadow-xl shadow-primary/5 bg-card group hover:scale-[1.02] transition-all duration-500 rounded-[2.5rem]">
-          <div className="h-2 w-full bg-primary" />
+        <ShadCard className="border-none shadow-md shadow-primary/5 bg-card/50 backdrop-blur-sm rounded-[2rem] hover:bg-card transition-colors duration-300">
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-              {isStaff ? 'My Assets' : 'Inventory'}
+            <ShadCardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Total Assets
             </ShadCardTitle>
-            <div className="p-3 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
-              <Laptop size={20} />
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <Laptop size={18} />
             </div>
           </ShadCardHeader>
-          <ShadCardContent className="pt-2">
-            <div className="text-4xl font-black text-foreground italic">{totalAssets}</div>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2 flex items-center gap-1">
-              Active Units <ArrowUpRight size={10} />
+          <ShadCardContent>
+            <div className="text-4xl font-bold tracking-tight">{totalAssets}</div>
+            <p className="text-[10px] text-muted-foreground mt-3 flex items-center gap-1 font-bold uppercase tracking-widest">
+              <span className="text-emerald-600 flex items-center gap-0.5">
+                <ArrowUpRight size={12} /> Live
+              </span>
+              units in registry
             </p>
           </ShadCardContent>
         </ShadCard>
 
-        <ShadCard className="overflow-hidden border-none shadow-xl shadow-primary/5 bg-card group hover:scale-[1.02] transition-all duration-500 rounded-[2.5rem]">
-          <div className="h-2 w-full bg-chart-1" />
+        <ShadCard className="border-none shadow-md shadow-primary/5 bg-secondary/50 backdrop-blur-sm rounded-[2rem] hover:bg-secondary transition-colors duration-300">
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-              {isStaff ? 'My Licenses' : 'Software'}
+            <ShadCardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Software Keys
             </ShadCardTitle>
-            <div className="p-3 bg-chart-1/10 text-chart-1 rounded-2xl group-hover:bg-chart-1 group-hover:text-primary-foreground transition-all duration-500">
-              <Key size={20} />
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <Key size={18} />
             </div>
           </ShadCardHeader>
-          <ShadCardContent className="pt-2">
-            <div className="text-4xl font-black text-foreground italic">{activeLicenses}</div>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2">
-              Valid Keys
+          <ShadCardContent>
+            <div className="text-4xl font-bold tracking-tight">{activeLicenses}</div>
+            <p className="text-[10px] text-muted-foreground mt-3 font-bold uppercase tracking-widest">
+              Active subscriptions
             </p>
           </ShadCardContent>
         </ShadCard>
 
-        <ShadCard className="overflow-hidden border-none shadow-xl shadow-primary/5 bg-card group hover:scale-[1.02] transition-all duration-500 rounded-[2.5rem]">
-          <div className="h-2 w-full bg-destructive" />
+        <ShadCard className={`border-none shadow-md shadow-primary/5 rounded-[2rem] transition-colors duration-300 ${pendingMaintenance > 0 ? 'bg-destructive/10' : 'bg-card/50'}`}>
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+            <ShadCardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               Maintenance
             </ShadCardTitle>
-            <div className={`p-3 rounded-2xl transition-all duration-500 ${pendingMaintenance > 0 ? 'bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-              <ShieldAlert size={20} />
+            <div className={`p-2 rounded-xl ${pendingMaintenance > 0 ? 'bg-destructive text-destructive-foreground' : 'bg-muted text-muted-foreground'}`}>
+              <ShieldAlert size={18} />
             </div>
           </ShadCardHeader>
-          <ShadCardContent className="pt-2">
-            <div className={`text-4xl font-black italic ${pendingMaintenance > 0 ? 'text-destructive' : 'text-foreground'}`}>
+          <ShadCardContent>
+            <div className={`text-4xl font-bold tracking-tight ${pendingMaintenance > 0 ? 'text-destructive' : ''}`}>
               {pendingMaintenance}
             </div>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2">
-              Pending Tickets
+            <p className="text-[10px] text-muted-foreground mt-3 font-bold uppercase tracking-widest">
+              Open service tickets
             </p>
           </ShadCardContent>
         </ShadCard>
 
-        <ShadCard className="overflow-hidden border-none shadow-xl shadow-primary/5 bg-card group hover:scale-[1.02] transition-all duration-500 rounded-[2.5rem]">
-          <div className="h-2 w-full bg-emerald-500" />
+        <ShadCard className="border-none shadow-md shadow-primary/5 bg-accent/30 backdrop-blur-sm rounded-[2rem] hover:bg-accent/40 transition-colors duration-300">
           <ShadCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <ShadCardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-              {isStaff ? 'Verify' : 'Staff'}
+            <ShadCardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              {isStaff ? 'Join Date' : 'Staff Count'}
             </ShadCardTitle>
-            <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-2xl group-hover:bg-emerald-500 group-hover:text-primary-foreground transition-all duration-500">
-              <Users size={20} />
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <Users size={18} />
             </div>
           </ShadCardHeader>
-          <ShadCardContent className="pt-2">
-            <div className="text-4xl font-black text-foreground italic">
+          <ShadCardContent>
+            <div className="text-4xl font-bold tracking-tight">
               {isStaff ? (employees.find(e => e.email === userEmail)?.joinDate ? format(new Date(employees.find(e => e.email === userEmail).joinDate), 'MMM yy') : 'N/A') : assignedUsers}
             </div>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-2 italic">
-               {isStaff ? 'Operational status' : 'Total Personnel'}
+            <p className="text-[10px] text-muted-foreground mt-3 font-bold uppercase tracking-widest">
+               {isStaff ? 'Operational since' : 'Registered personnel'}
             </p>
           </ShadCardContent>
         </ShadCard>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <ShadCard className="col-span-4 border-none shadow-xl shadow-primary/5 bg-card rounded-[3rem]">
-          <ShadCardHeader className="flex flex-row items-center justify-between p-8 pb-4">
-            <div className="space-y-1">
-              <ShadCardTitle className="text-2xl font-black tracking-tight italic">Category Pulse</ShadCardTitle>
-              <ShadCardDescription className="text-xs font-bold uppercase tracking-widest">Asset distribution hierarchy</ShadCardDescription>
-            </div>
-            <div className="p-3 bg-secondary rounded-2xl">
-              <History size={20} className="text-muted-foreground" />
-            </div>
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-7">
+        <ShadCard className="col-span-4 border-none shadow-xl shadow-primary/5 bg-card/30 rounded-[2.5rem]">
+          <ShadCardHeader>
+            <ShadCardTitle className="text-xl font-bold tracking-tight">Resource Pulse</ShadCardTitle>
+            <ShadCardDescription className="text-xs font-bold uppercase tracking-widest">Distribution across categories</ShadCardDescription>
           </ShadCardHeader>
-          <ShadCardContent className="p-8 pt-0">
-            <div className="h-[350px]">
+          <ShadCardContent>
+            <div className="h-[300px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={assetChartData.length > 0 ? assetChartData : [{ name: 'None', count: 0, fill: '#64748b' }]}>
                   <XAxis 
@@ -221,14 +204,13 @@ export function Dashboard({ userRole, userEmail }: { userRole?: UserRole, userEm
                     fontSize={10} 
                     tickLine={false} 
                     axisLine={false} 
-                    tick={{ fill: 'var(--muted-foreground)', fontWeight: '800' }}
-                    textAnchor="middle"
+                    tick={{ fill: 'var(--muted-foreground)', fontWeight: 'bold' }}
                   />
                   <Tooltip
-                    contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', padding: '16px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                    cursor={{ fill: 'var(--secondary)', radius: 12 }}
+                    contentStyle={{ backgroundColor: 'var(--card)', border: 'none', borderRadius: '16px', fontSize: '10px', fontWeight: 'bold', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: 'var(--muted)', opacity: 0.1 }}
                   />
-                  <Bar dataKey="count" radius={[12, 12, 12, 12]} barSize={32}>
+                  <Bar dataKey="count" radius={[12, 12, 0, 0]} barSize={40}>
                     {assetChartData.map((entry, index) => (
                       <Cell key={`bar-cell-${index}`} fill={entry.fill} />
                     ))}
@@ -239,13 +221,13 @@ export function Dashboard({ userRole, userEmail }: { userRole?: UserRole, userEm
           </ShadCardContent>
         </ShadCard>
 
-        <ShadCard className="col-span-3 border-none shadow-xl shadow-primary/5 bg-card rounded-[3rem] overflow-hidden">
-          <ShadCardHeader className="p-8 pb-4">
-            <ShadCardTitle className="text-2xl font-black tracking-tight italic">Inventory Health</ShadCardTitle>
-            <ShadCardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Live operational metrics</ShadCardDescription>
+        <ShadCard className="col-span-3 border-none shadow-xl shadow-primary/5 bg-card/30 rounded-[2.5rem] overflow-hidden">
+          <ShadCardHeader>
+            <ShadCardTitle className="text-xl font-bold tracking-tight">System Health</ShadCardTitle>
+            <ShadCardDescription className="text-xs font-bold uppercase tracking-widest">Operational status overview</ShadCardDescription>
           </ShadCardHeader>
-          <ShadCardContent className="p-8 pt-0">
-            <div className="h-[250px] relative">
+          <ShadCardContent>
+            <div className="h-[220px] relative mt-4">
               {statusChartData.length > 0 ? (
                 <>
                   <ResponsiveContainer width="100%" height="100%">
@@ -254,41 +236,41 @@ export function Dashboard({ userRole, userEmail }: { userRole?: UserRole, userEm
                         data={statusChartData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={90}
-                        outerRadius={110}
-                        paddingAngle={12}
+                        innerRadius={70}
+                        outerRadius={95}
+                        paddingAngle={8}
                         dataKey="value"
-                        animationDuration={1500}
                         stroke="none"
                         cornerRadius={12}
+                        animationDuration={1500}
                       >
                         {statusChartData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
                       <Tooltip 
-                        contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: 'bold' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-5xl font-black text-foreground italic">{totalAssets}</span>
-                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-1">Units</span>
+                    <span className="text-4xl font-black text-foreground tracking-tighter">{totalAssets}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mt-1">Units</span>
                   </div>
                 </>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-4">
-                  <AlertCircle size={48} className="opacity-20 translate-y-2" />
-                  <span className="font-bold uppercase tracking-widest italic opacity-50">Data Outage</span>
+                <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
+                  <AlertCircle size={32} className="opacity-20" />
+                  <span className="text-xs font-bold uppercase tracking-widest italic opacity-50">Telemetry Lost</span>
                 </div>
               )}
             </div>
-            <div className="mt-8 flex flex-wrap gap-3 justify-center">
+            <div className="mt-8 grid grid-cols-2 gap-3">
               {statusChartData.map((item) => (
-                <div key={item.name} className="flex items-center gap-3 px-4 py-2 rounded-full border border-border bg-secondary/50">
-                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{item.name}</span>
-                  <span className="text-sm font-black text-foreground ml-1">{item.value}</span>
+                <div key={item.name} className="flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-border/50 bg-background/50 backdrop-blur-sm">
+                  <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate flex-1">{item.name}</span>
+                  <span className="text-sm font-black text-foreground">{item.value}</span>
                 </div>
               ))}
             </div>
