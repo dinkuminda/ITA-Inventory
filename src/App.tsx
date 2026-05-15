@@ -13,10 +13,11 @@ import { AssetsList } from '@/src/components/assets/AssetsList';
 import { LicensesList } from '@/src/components/licenses/LicensesList';
 import { MaintenanceList } from '@/src/components/maintenance/MaintenanceList';
 import { StaffList } from '@/src/components/staff/StaffList';
+import { UserList } from '@/src/components/users/UserList';
 import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Boxes, Key, ShieldAlert, Settings as SettingsIcon, Eye, EyeOff, LayoutDashboard, Users, UserCircle, Fingerprint } from 'lucide-react';
+import { Boxes, Key, ShieldAlert, Settings as SettingsIcon, Eye, EyeOff, LayoutDashboard, Users, UserCircle, Fingerprint, ShieldCheck } from 'lucide-react';
 import { authService } from './lib/authService';
 import { supabase } from './lib/supabase';
 import { UserProfile, UserRole } from './types';
@@ -181,6 +182,7 @@ export default function App() {
       { path: '/assets', label: 'Assets', icon: Boxes },
       ...(isAdmin ? [
         { path: '/staff', label: 'Staff', icon: Users },
+        { path: '/users', label: 'Users', icon: ShieldCheck },
         { path: '/settings', label: 'System', icon: SettingsIcon },
       ] : [
         { path: '/licenses', label: 'Keys', icon: Key },
@@ -477,6 +479,13 @@ export default function App() {
               <Route path="/staff" element={
                 effectiveProfile?.role === UserRole.ADMIN ? (
                   <StaffList userRole={effectiveProfile?.role} userEmail={effectiveProfile?.email || user?.email} />
+                ) : (
+                  <Navigate to="/dashboard" replace />
+                )
+              } />
+              <Route path="/users" element={
+                effectiveProfile?.role === UserRole.ADMIN ? (
+                  <UserList currentUserRole={effectiveProfile?.role} currentUserEmail={effectiveProfile?.email || user?.email} />
                 ) : (
                   <Navigate to="/dashboard" replace />
                 )

@@ -13,7 +13,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  Fingerprint
+  Fingerprint,
+  ShieldCheck
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -35,6 +36,7 @@ const navItems = [
   { icon: Key, label: 'Licenses', path: '/licenses' },
   { icon: ShieldAlert, label: 'Maintenance', path: '/maintenance' },
   { icon: Users, label: 'Staff', path: '/staff' },
+  { icon: ShieldCheck, label: 'Users', path: '/users' },
 ];
 
 interface AppSidebarProps {
@@ -48,7 +50,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
   const isCollapsed = state === "collapsed";
 
   const filteredNavItems = navItems.filter(item => {
-    if (item.path === '/staff' && user?.role !== UserRole.ADMIN) return false;
+    if ((item.path === '/staff' || item.path === '/users') && user?.role !== UserRole.ADMIN) return false;
     return true;
   });
 
