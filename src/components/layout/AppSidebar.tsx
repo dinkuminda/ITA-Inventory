@@ -61,7 +61,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="font-black text-base tracking-tighter text-foreground uppercase leading-none">ICS IMS</span>
+              <span className="font-black text-base tracking-tighter text-foreground uppercase leading-none">ICS</span>
               <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.1em] mt-1">Immigration Service</span>
             </div>
           )}

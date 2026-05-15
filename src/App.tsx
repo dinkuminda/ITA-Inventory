@@ -241,7 +241,7 @@ export default function App() {
           <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
           
-          <div className="w-full max-w-md space-y-8 bg-card/95 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/10 z-10">
+          <div className="w-full max-w-sm space-y-6 bg-card/95 backdrop-blur-xl p-7 rounded-[2.5rem] shadow-2xl border border-white/10 z-10">
             <div className="text-center space-y-3">
               <div className="mx-auto w-24 h-24 bg-primary/15 text-primary rounded-[2rem] flex items-center justify-center mb-6 shadow-inner border border-primary/10">
                 <Fingerprint size={48} strokeWidth={1.2} className="animate-pulse" />
@@ -255,10 +255,6 @@ export default function App() {
                   </p>
                 </div>
               </div>
-              <div className="h-px w-12 bg-primary/20 mx-auto mt-4" />
-              <p className="text-xs text-muted-foreground font-bold uppercase tracking-[0.2em] pt-2">
-                Inventory Management System
-              </p>
             </div>
 
             {signupSuccess ? (
