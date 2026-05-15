@@ -224,7 +224,7 @@ export default function App() {
              <Fingerprint className="absolute inset-0 m-auto h-10 w-10 text-primary animate-pulse" />
           </div>
           <div className="text-center space-y-2">
-            <p className="text-3xl font-black tracking-tighter text-white">ICS Directorate</p>
+            <p className="text-3xl font-black tracking-tighter text-white uppercase">ICS Directorate</p>
             <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.3em] animate-pulse">Initializing Security Protocol</p>
           </div>
         </div>
@@ -243,16 +243,20 @@ export default function App() {
           
           <div className="w-full max-w-md space-y-8 bg-card/95 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/10 z-10">
             <div className="text-center space-y-3">
-              <div className="mx-auto w-20 h-20 bg-primary/20 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-inner">
-                <Fingerprint size={40} strokeWidth={1.5} className="animate-pulse" />
+              <div className="mx-auto w-24 h-24 bg-primary/15 text-primary rounded-[2rem] flex items-center justify-center mb-6 shadow-inner border border-primary/10">
+                <Fingerprint size={48} strokeWidth={1.2} className="animate-pulse" />
               </div>
-              <div className="space-y-1">
-                <h1 className="text-4xl font-black tracking-tighter text-foreground">ICS</h1>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">
-                  Immigration & Citizenship
-                </p>
+              <div className="space-y-2">
+                <h1 className="text-5xl font-black tracking-tighter text-foreground uppercase">ICS</h1>
+                <div className="flex flex-col gap-1">
+                  <p className="text-[11px] font-black text-foreground uppercase tracking-[0.1em]">የኢሚግሬሽንና የዜግነት አገልግሎት</p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">
+                    Immigration and Citizenship Service
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-foreground/60 font-medium pt-2">
+              <div className="h-px w-12 bg-primary/20 mx-auto mt-4" />
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-[0.2em] pt-2">
                 Inventory Management System
               </p>
             </div>
