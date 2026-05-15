@@ -16,7 +16,7 @@ import { StaffList } from '@/src/components/staff/StaffList';
 import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Boxes, Key, ShieldAlert, Settings as SettingsIcon, Eye, EyeOff, LayoutDashboard, Users, UserCircle } from 'lucide-react';
+import { Boxes, Key, ShieldAlert, Settings as SettingsIcon, Eye, EyeOff, LayoutDashboard, Users, UserCircle, Fingerprint } from 'lucide-react';
 import { authService } from './lib/authService';
 import { supabase } from './lib/supabase';
 import { UserProfile, UserRole } from './types';
@@ -217,15 +217,15 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-primary">
+      <div className="min-h-screen flex items-center justify-center bg-[#0d2a4a] text-primary">
         <div className="flex flex-col items-center gap-8">
           <div className="relative">
-             <div className="animate-spin rounded-full h-20 w-20 border-[4px] border-secondary border-t-primary"></div>
-             <Boxes className="absolute inset-0 m-auto h-8 w-8 text-primary" />
+             <div className="animate-spin rounded-full h-24 w-24 border-[4px] border-white/5 border-t-primary"></div>
+             <Fingerprint className="absolute inset-0 m-auto h-10 w-10 text-primary animate-pulse" />
           </div>
           <div className="text-center space-y-2">
-            <p className="text-2xl font-black tracking-tight text-foreground">ITA Directorate</p>
-            <p className="text-sm text-muted-foreground font-medium animate-pulse">Establishing secure session...</p>
+            <p className="text-3xl font-black tracking-tighter text-white">ICS Directorate</p>
+            <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.3em] animate-pulse">Initializing Security Protocol</p>
           </div>
         </div>
       </div>
@@ -236,15 +236,24 @@ export default function App() {
   if (!user) {
     return (
       <>
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-xl shadow-sm border border-border">
-            <div className="text-center space-y-2">
-              <div className="mx-auto w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
-                <Boxes size={24} />
+        <div className="min-h-screen flex items-center justify-center bg-[#0d2a4a] p-4 relative overflow-hidden">
+          {/* Decorative background elements */}
+          <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
+          
+          <div className="w-full max-w-md space-y-8 bg-card/95 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/10 z-10">
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-20 h-20 bg-primary/20 text-primary rounded-3xl flex items-center justify-center mb-6 shadow-inner">
+                <Fingerprint size={40} strokeWidth={1.5} className="animate-pulse" />
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Cloud Inventory</h1>
-              <p className="text-sm text-muted-foreground">
-                Sign in to manage your organization's resources
+              <div className="space-y-1">
+                <h1 className="text-4xl font-black tracking-tighter text-foreground">ICS</h1>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">
+                  Immigration & Citizenship
+                </p>
+              </div>
+              <p className="text-sm text-foreground/60 font-medium pt-2">
+                Inventory Management System
               </p>
             </div>
 

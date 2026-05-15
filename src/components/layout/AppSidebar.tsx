@@ -55,12 +55,12 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
     <Sidebar collapsible="icon" className="border-r border-border bg-sidebar h-full text-foreground shadow-none">
       <SidebarHeader className={`transition-all ${isCollapsed ? 'items-center px-2 py-4' : 'p-6'}`}>
         <div className="flex items-center gap-3">
-          <div className="bg-primary text-primary-foreground p-2 rounded-xl shrink-0 shadow-lg shadow-primary/20">
-            <Boxes size={22} />
+          <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-lg shadow-primary/20">
+            <Fingerprint size={22} />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="font-black text-base tracking-tighter text-foreground uppercase">CloudInv</span>
+              <span className="font-black text-base tracking-tighter text-foreground uppercase">ICS IMS</span>
               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] -mt-1">Inventory Sys</span>
             </div>
           )}
