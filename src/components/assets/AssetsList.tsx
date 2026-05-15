@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { PlusCircle, Upload, Printer } from "lucide-react";
+import { PlusCircle, Printer } from "lucide-react";
 import { Asset, AssetStatus, ApprovalStatus, UserRole, Employee } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -260,34 +260,6 @@ export function AssetsList({ userRole, userEmail }: { userRole?: UserRole, userE
         <div className="flex items-center gap-2">
           {hasEditPermission && (
             <>
-              <Input
-                type="file"
-                accept=".csv"
-                className="hidden"
-                id="assets-bulk-import"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleImport(file);
-                }}
-              />
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleExport()}
-                className="h-9 px-4 rounded-md gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Export
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => document.getElementById('assets-bulk-import')?.click()}
-                className="h-9 px-4 rounded-md gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Import
-              </Button>
               <Button 
                 size="sm"
                 onClick={() => { resetForm(); setIsDialogOpen(true); }} 

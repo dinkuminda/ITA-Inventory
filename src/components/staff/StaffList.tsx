@@ -5,7 +5,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from 'react';
-import { PlusCircle, Upload, Shield, Lock, UserPlus, AlertTriangle, Mail } from "lucide-react";
+import { PlusCircle, Shield, Lock, UserPlus, AlertTriangle, Mail } from "lucide-react";
 import { Asset, AssetStatus, ApprovalStatus, UserRole, Employee } from '@/src/types';
 import { DataTable } from '@/src/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -288,38 +288,6 @@ export function StaffList({ userRole, userEmail }: { userRole?: UserRole, userEm
           </form>
           
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {isAdmin && (
-              <>
-                <Input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  id="staff-bulk-import"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleImport(file);
-                  }}
-                />
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleExport()}
-                  className="h-9 px-4 rounded-md gap-2"
-                >
-                  <Upload className="h-4 w-4" />
-                  Export
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => document.getElementById('staff-bulk-import')?.click()}
-                  className="h-9 px-4 rounded-md gap-2"
-                >
-                  <Upload className="h-4 w-4" />
-                  Import
-                </Button>
-              </>
-            )}
             <Button size="sm" onClick={() => { resetForm(); setIsDialogOpen(true); }} className="h-9 px-4 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
               <PlusCircle className="h-4 w-4" />
               Add Staff
